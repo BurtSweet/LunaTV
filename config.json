@@ -84,12 +84,6 @@
       "detail": "https://www.moduzy.net",
       "is_adult": false
     },
-    "mozhuazy": {
-      "api": "https://mozhuazy.com/api.php/provide/vod",
-      "name": "TV-魔爪资源",
-      "detail": "https://mozhuazy.com",
-      "is_adult": false
-    },
     "ffzy1": {
       "name": "TV-非凡资源",
       "api": "https://api.ffzyapi.com/api.php/provide/vod",
@@ -433,14 +427,6 @@
       "api": "https://dbzy.tv/api.php/provide/vod",
       "name": "豆瓣资源"
     },
-    "mozhua": {
-      "api": "https://mozhuazy.com/api.php/provide/vod",
-      "name": "魔爪资源"
-    },
-    "bdzy": {
-      "api": "https://api.apibdzy.com/api.php/provide/vod",
-      "name": "百度资源"
-    },
     "xinlangaa": {
       "api": "https://api.xinlangapi.com/xinlangapi.php/provide/vod",
       "name": "新浪资源"
@@ -467,6 +453,22 @@
     "rycj": {
       "api": "https://cj.rycjapi.com/api.php/provide/vod",
       "name": "如意资源"
+    },
+    "tyyszy": {
+      "api": "https://tyyszy.com/api.php/provide/vod",
+      "name": "天涯资源"
+    },
+    "tyyszyapi": {
+      "api": "https://tyyszy.com/api.php/provide/vod",
+      "name": "TV-天涯影视",
+      "detail": "https://tyyszy.com",
+      "is_adult": false
+    },
+    "semaozy": {
+      "name": "AV-色猫资源",
+      "api": "https://caiji.semaozy.net/inc/apijson_vod.php",
+      "detail": "https://semaozy1.com/",
+      "is_adult": true
     }
   }
 }
