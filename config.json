@@ -309,12 +309,6 @@
       "detail": "https://www.pgxdy.com",
       "is_adult": true
     },
-    "hsckzy": {
-      "name": "AV-黄色仓库",
-      "api": "https://hsckzy.xyz/api.php/provide/vod",
-      "detail": "hsckzy.xyz",
-      "is_adult": true
-    },
     "dnzzy": {
       "api": "https://apidanaizi.com/api.php/provide/vod",
       "name": "AV-大奶子",
