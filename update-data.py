@@ -148,9 +148,13 @@ def filter_and_validate_sources(sources: Dict[str, Any], enable_adult_filter: bo
         print(f"ℹ️ 成人内容过滤已启用。关键词: '{ADULT_FILTER_KEYWORD}'")
         for key, source_info in sources.items():
             name = source_info.get('name', '')
+            is_adult = source_info.get('is_adult', '')
             if key in keys_to_delete:
                 continue
-
+            if is_adult is True:
+                print(f"🗑️ 过滤: 源 '{name}' 标记为成人内容，已标记删除。")
+                keys_to_delete.append(key)
+                continue
             if ADULT_FILTER_KEYWORD in name:
                 print(f"🗑️ 过滤: 源 '{name}' 包含成人内容关键词，已标记删除。")
                 keys_to_delete.append(key)
