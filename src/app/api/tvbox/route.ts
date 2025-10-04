@@ -3,6 +3,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
+// Helper function to get base URL with SITE_BASE env support
+function getBaseUrl(request: NextRequest): string {
+  // 优先使用环境变量 SITE_BASE（如果用户设置了）
+  const envBase = (process.env.SITE_BASE || '').trim().replace(/\/$/, '');
+  if (envBase) return envBase;
+
+  // Fallback：使用原有逻辑（完全保留）
+  const host = request.headers.get('host') || 'localhost:3000';
+  const protocol = request.headers.get('x-forwarded-proto') || 'http';
+  return `${protocol}://${host}`;
+}
+
 // 生产环境使用Redis/Upstash/Kvrocks的频率限制
 async function checkRateLimit(ip: string, limit = 60, windowMs = 60000): Promise<boolean> {
   const now = Date.now();
@@ -40,6 +52,28 @@ async function cleanExpiredRateLimitCache(): Promise<void> {
   }
 }
 
+// 并发控制器 - 限制同时请求数量（优化分类获取性能）
+class ConcurrencyLimiter {
+  private running = 0;
+
+  constructor(private maxConcurrent: number) {}
+
+  async run<T>(fn: () => Promise<T>): Promise<T> {
+    while (this.running >= this.maxConcurrent) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    this.running++;
+    try {
+      return await fn();
+    } finally {
+      this.running--;
+    }
+  }
+}
+
+const categoriesLimiter = new ConcurrencyLimiter(10); // 最多同时10个请求
+
 // TVBox源格式接口 (基于官方标准)
 interface TVBoxSource {
   key: string;
@@ -76,16 +110,35 @@ interface TVBoxConfig {
     header?: Record<string, string>;
   }>; // 解析源
   flags?: string[]; // 播放标识
-  ijk?: Record<string, unknown>; // IJK播放器配置
+  ijk?: Array<{
+    group: string;
+    options: Array<{
+      category: number;
+      name: string;
+      value: string;
+    }>;
+  }>; // IJK播放器配置
   ads?: string[]; // 广告过滤规则
+  doh?: Array<{
+    name: string;
+    url: string;
+    ips: string[];
+  }>; // DNS over HTTPS 配置
+  rules?: Array<{
+    name: string;
+    hosts: string[];
+    regex: string[];
+  }>; // 播放规则（用于影视仓模式）
+  maxHomeVideoContent?: string; // 首页最大视频数量
 }
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format') || 'json'; // 支持json和base64格式
+    const mode = (searchParams.get('mode') || '').toLowerCase(); // 支持safe|min模式
     const token = searchParams.get('token'); // 获取token参数
-    
+
     // 读取当前配置
     const config = await getConfig();
     const securityConfig = config.TVBoxSecurityConfig;
@@ -174,10 +227,8 @@ export async function GET(request: NextRequest) {
         }, { status: 429 });
       }
     }
-    
-    const host = request.headers.get('host') || 'localhost:3000';
-    const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const baseUrl = `${protocol}://${host}`;
+
+    const baseUrl = getBaseUrl(request);
 
     // 从配置中获取源站列表
     const sourceConfigs = config.SourceConfig || [];
@@ -189,26 +240,94 @@ export async function GET(request: NextRequest) {
     // 过滤掉被禁用的源站和没有API地址的源站
     const enabledSources = sourceConfigs.filter(source => !source.disabled && source.api && source.api.trim() !== '');
 
+    // 跟踪全局 spider jar（从 detail 字段中提取）
+    let globalSpiderJar = '';
+
     // 转换为TVBox格式
-    const tvboxConfig: TVBoxConfig = {
+    let tvboxConfig: TVBoxConfig = {
       // 基础配置
-      spider: '', // 可以根据需要添加爬虫jar包
+      spider: '', // 将在后面设置为 globalSpiderJar
       wallpaper: `${baseUrl}/logo.png`, // 使用项目Logo作为壁纸
 
       // 影视源配置
       sites: await Promise.all(enabledSources.map(async (source) => {
-        // 智能的type判断逻辑：
-        // 1. 如果api地址包含 "/provide/vod" 且不包含 "at/xml"，则认为是JSON类型 (type=1)
-        // 2. 如果api地址包含 "at/xml"，则认为是XML类型 (type=0)
-        // 3. 如果api地址以 ".json" 结尾，则认为是JSON类型 (type=1)
-        // 4. 其他情况默认为JSON类型 (type=1)，因为现在大部分都是JSON
-        let type = 1; // 默认为JSON类型
+        /**
+         * 智能 API 类型检测（参考 DecoTV 优化）
+         * 0: MacCMS XML格式
+         * 1: MacCMS JSON格式
+         * 3: CSP源 (Custom Spider Plugin)
+         */
+        const detectApiType = (api: string): number => {
+          const url = api.toLowerCase().trim();
 
-        if (source.api && typeof source.api === 'string') {
-          const apiLower = source.api.toLowerCase();
-          if (apiLower.includes('at/xml') || apiLower.endsWith('.xml')) {
-            type = 0; // XML类型
+          // CSP 源（插件源，优先判断）
+          if (url.startsWith('csp_')) return 3;
+
+          // XML 采集接口 - 更精确匹配
+          if (
+            url.includes('.xml') ||
+            url.includes('xml.php') ||
+            url.includes('api.php/provide/vod/at/xml') ||
+            url.includes('provide/vod/at/xml') ||
+            (url.includes('maccms') && url.includes('xml'))
+          ) {
+            return 0;
           }
+
+          // JSON 采集接口 - 标准苹果CMS格式
+          if (
+            url.includes('.json') ||
+            url.includes('json.php') ||
+            url.includes('api.php/provide/vod') ||
+            url.includes('provide/vod') ||
+            url.includes('api.php') ||
+            url.includes('maccms') ||
+            url.includes('/api/') ||
+            url.match(/\/provide.*vod/) ||
+            url.match(/\/api.*vod/)
+          ) {
+            return 1;
+          }
+
+          // 默认为JSON类型（苹果CMS最常见）
+          return 1;
+        };
+
+        let type = source.api && typeof source.api === 'string'
+          ? detectApiType(source.api)
+          : 1;
+
+        // 解析 detail 字段：支持 JSON 扩展配置（CSP源、自定义jar等）
+        const detail = (source.detail || '').trim();
+        const siteExt = ''; // 🔑 强制为空，忽略配置中的 ext
+        let siteJar: string | undefined;
+
+        if (detail) {
+          try {
+            const obj = JSON.parse(detail);
+            if (obj) {
+              if (obj.type !== undefined) type = obj.type;
+              if (obj.api) source.api = obj.api;
+              // 🔑 关键修复：强制忽略 ext 字段
+              // 原因：很多源的 ext 是网站首页 URL（如 http://caiji.dyttzyapi.com）
+              // Box-main 会访问这个 URL 并把返回的 HTML 当作 extend 参数传给 API，导致无数据
+              // if (obj.ext !== undefined) {
+              //   siteExt = typeof obj.ext === 'string' ? obj.ext : JSON.stringify(obj.ext);
+              // }
+              if (obj.jar) {
+                siteJar = obj.jar;
+                if (!globalSpiderJar) globalSpiderJar = obj.jar;
+              }
+            }
+          } catch {
+            // 非 JSON 时也不作为 ext 字符串
+            // siteExt = detail;
+          }
+        }
+
+        // CSP 源检测：api 以 csp_ 开头强制为 type 3
+        if (typeof source.api === 'string' && source.api.toLowerCase().startsWith('csp_')) {
+          type = 3;
         }
 
         // 动态获取源站分类
@@ -236,8 +355,20 @@ export async function GET(request: NextRequest) {
             }
           }
         } catch (error) {
-          // 获取分类失败时使用默认分类
-          console.warn(`获取源站 ${source.name} 分类失败，使用默认分类:`, error);
+          // 优化的错误处理：区分不同类型的错误
+          if (error instanceof Error) {
+            if (error.name === 'AbortError') {
+              console.warn(`[TVBox] 获取源站 ${source.name} 分类超时(10s)，使用默认分类`);
+            } else if (error.message.includes('JSON') || error.message.includes('parse')) {
+              console.warn(`[TVBox] 源站 ${source.name} 返回的分类数据格式错误，使用默认分类`);
+            } else if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+              console.warn(`[TVBox] 无法连接到源站 ${source.name}，使用默认分类`);
+            } else {
+              console.warn(`[TVBox] 获取源站 ${source.name} 分类失败: ${error.message}，使用默认分类`);
+            }
+          } else {
+            console.warn(`[TVBox] 获取源站 ${source.name} 分类失败（未知错误），使用默认分类`);
+          }
         }
 
         return {
@@ -248,7 +379,8 @@ export async function GET(request: NextRequest) {
           searchable: 1, // 可搜索
           quickSearch: 1, // 支持快速搜索
           filterable: 1, // 支持分类筛选
-          ext: '', // 扩展数据字段，用于配置规则或外部文件URL
+          ext: siteExt || '', // 确保始终是字符串（即使是空的）
+          ...(siteJar && { jar: siteJar }), // 站点级 jar 包
           playerUrl: '', // 站点解析URL
           hide: 0, // 是否隐藏源站 (1: 隐藏, 0: 显示)
           categories: categories // 使用动态获取的分类
@@ -283,6 +415,51 @@ export async function GET(request: NextRequest) {
         "mgtv", "wasu", "bilibili", "le", "duoduozy", "renrenmi", "xigua",
         "优酷", "腾讯", "爱奇艺", "奇艺", "乐视", "搜狐", "土豆", "PPTV",
         "芒果", "华数", "哔哩", "1905"
+      ],
+
+      // IJK播放器优化配置（软解码 + 硬解码）
+      ijk: [
+        {
+          group: '软解码',
+          options: [
+            { category: 4, name: 'opensles', value: '0' },
+            { category: 4, name: 'overlay-format', value: '842225234' },
+            { category: 4, name: 'framedrop', value: '1' },
+            { category: 4, name: 'start-on-prepared', value: '1' },
+            { category: 1, name: 'http-detect-range-support', value: '0' },
+            { category: 1, name: 'fflags', value: 'fastseek' },
+            { category: 4, name: 'reconnect', value: '1' },
+            { category: 4, name: 'enable-accurate-seek', value: '0' },
+            { category: 4, name: 'mediacodec', value: '0' },
+            { category: 4, name: 'mediacodec-auto-rotate', value: '0' },
+            { category: 4, name: 'mediacodec-handle-resolution-change', value: '0' },
+            { category: 2, name: 'skip_loop_filter', value: '48' },
+            { category: 4, name: 'packet-buffering', value: '0' },
+            { category: 1, name: 'analyzeduration', value: '2000000' },
+            { category: 1, name: 'probesize', value: '10485760' },
+            { category: 1, name: 'flush_packets', value: '1' }
+          ]
+        },
+        {
+          group: '硬解码',
+          options: [
+            { category: 4, name: 'opensles', value: '0' },
+            { category: 4, name: 'overlay-format', value: '842225234' },
+            { category: 4, name: 'framedrop', value: '1' },
+            { category: 4, name: 'start-on-prepared', value: '1' },
+            { category: 1, name: 'http-detect-range-support', value: '0' },
+            { category: 1, name: 'fflags', value: 'fastseek' },
+            { category: 4, name: 'reconnect', value: '1' },
+            { category: 4, name: 'enable-accurate-seek', value: '0' },
+            { category: 4, name: 'mediacodec', value: '1' },
+            { category: 4, name: 'mediacodec-auto-rotate', value: '1' },
+            { category: 4, name: 'mediacodec-handle-resolution-change', value: '1' },
+            { category: 2, name: 'skip_loop_filter', value: '48' },
+            { category: 4, name: 'packet-buffering', value: '0' },
+            { category: 1, name: 'analyzeduration', value: '2000000' },
+            { category: 1, name: 'probesize', value: '10485760' }
+          ]
+        }
       ],
 
       // 直播源（合并所有启用的直播源为一个，解决TVBox多源限制）
@@ -369,8 +546,84 @@ export async function GET(request: NextRequest) {
         "qiu.xixiqiu.com",
         "cdnjs.hnfenxun.com",
         "cms.qdwght.com"
+      ],
+
+      // DoH (DNS over HTTPS) 配置 - 解决 DNS 污染问题
+      doh: [
+        {
+          name: '阿里DNS',
+          url: 'https://dns.alidns.com/dns-query',
+          ips: ['223.5.5.5', '223.6.6.6']
+        },
+        {
+          name: '腾讯DNS',
+          url: 'https://doh.pub/dns-query',
+          ips: ['119.29.29.29', '119.28.28.28']
+        },
+        {
+          name: 'Google DNS',
+          url: 'https://dns.google/dns-query',
+          ips: ['8.8.8.8', '8.8.4.4']
+        }
       ]
     };
+
+    // 设置全局 spider jar（从 detail 中提取），添加 fallback 机制
+    const fallbackSpiderJars = [
+      'https://raw.githubusercontent.com/FongMi/CatVodSpider/main/jar/custom_spider.jar;md5;a8b9c1d2e3f4',
+      'https://gitcode.net/qq_26898231/TVBox/-/raw/main/JAR/XC.jar;md5;e53eb37c4dc3dce1c8ee0c996ca3a024',
+      'https://gh-proxy.com/https://raw.githubusercontent.com/FongMi/CatVodSpider/main/jar/custom_spider.jar',
+    ];
+
+    tvboxConfig.spider = globalSpiderJar || fallbackSpiderJars[0];
+
+    // 安全/最小模式：仅返回必要字段，提高兼容性
+    if (mode === 'safe' || mode === 'min') {
+      tvboxConfig = {
+        spider: tvboxConfig.spider,
+        sites: tvboxConfig.sites,
+        lives: tvboxConfig.lives,
+        parses: [{ name: '默认解析', type: 0, url: `${baseUrl}/api/parse?url=` }],
+      } as TVBoxConfig;
+    } else if (mode === 'yingshicang') {
+      // 影视仓专用模式：优化兼容性和播放规则
+      tvboxConfig = {
+        spider: 'https://gitcode.net/qq_26898231/TVBox/-/raw/main/JAR/XC.jar;md5;e53eb37c4dc3dce1c8ee0c996ca3a024',
+        wallpaper: 'https://picsum.photos/1920/1080/?blur=1',
+        sites: tvboxConfig.sites,
+        lives: tvboxConfig.lives,
+        parses: [
+          { name: '线路一', type: 0, url: 'https://jx.xmflv.com/?url=' },
+          { name: '线路二', type: 0, url: 'https://www.yemu.xyz/?url=' },
+          { name: '线路三', type: 0, url: 'https://jx.aidouer.net/?url=' },
+          { name: '线路四', type: 0, url: 'https://www.8090g.cn/?url=' },
+        ],
+        flags: [
+          'youku', 'qq', 'iqiyi', 'qiyi', 'letv', 'sohu', 'tudou', 'pptv',
+          'mgtv', 'wasu', 'bilibili', 'renrenmi',
+        ],
+        // 影视仓专用播放规则
+        rules: [
+          {
+            name: '量子资源',
+            hosts: ['vip.lz', 'hd.lz', 'v.cdnlz.com'],
+            regex: [
+              '#EXT-X-DISCONTINUITY\\r?\\n\\#EXTINF:6.433333,[\\s\\S]*?#EXT-X-DISCONTINUITY',
+              '#EXTINF.*?\\s+.*?1o.*?\\.ts\\s+',
+            ],
+          },
+          {
+            name: '非凡资源',
+            hosts: ['vip.ffzy', 'hd.ffzy', 'v.ffzyapi.com'],
+            regex: [
+              '#EXT-X-DISCONTINUITY\\r?\\n\\#EXTINF:6.666667,[\\s\\S]*?#EXT-X-DISCONTINUITY',
+              '#EXTINF.*?\\s+.*?1o.*?\\.ts\\s+',
+            ],
+          },
+        ],
+        maxHomeVideoContent: '20',
+      } as any;
+    }
 
     // 根据format参数返回不同格式
     if (format === 'base64' || format === 'txt') {
@@ -388,9 +641,10 @@ export async function GET(request: NextRequest) {
         }
       });
     } else {
-      // 返回JSON格式
-      return NextResponse.json(tvboxConfig, {
+      // 返回JSON格式（使用 text/plain 提高 TVBox 分支兼容性）
+      return new NextResponse(JSON.stringify(tvboxConfig), {
         headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET',
           'Access-Control-Allow-Headers': 'Content-Type',
