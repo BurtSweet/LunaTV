@@ -12,10 +12,12 @@ CONFIG_FILE = "config.json"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
 SUBSCRIPTION_URLS = [
     r'https://gist.githubusercontent.com/senshinya/5a5cb900dfa888fd61d767530f00fc48/raw/gistfile1.txt',
-    r'https://raw.githubusercontent.com/hafrey1/LunaTV-config/main/LunaTV-config.txt'
+    r'https://raw.githubusercontent.com/hafrey1/LunaTV-config/main/LunaTV-config.txt', #完整
+    #r'https://raw.githubusercontent.com/hafrey1/LunaTV-config/main/jinhuang.txt' #无黄
+
 ]
 # 成人内容过滤关键词,识别源的名称中包含该关键词的源
-ADULT_FILTER_KEYWORD = 'AV'
+ADULT_FILTER_KEYWORD = ['AV', '🔞', '成人', '情色', 'H漫', 'H动画', 'H漫画', 'H剧场版', 'H电影', 'H视频', '18禁', 'R18', 'R-18']
 #成人内容过滤的默认开关
 ENABLE_ADULT_FILTER = True
 
@@ -154,10 +156,10 @@ def filter_and_validate_sources(sources: Dict[str, Any], enable_adult_filter: bo
             if is_adult is True:
                 print(f"🗑️ 过滤: 源 '{name}' 标记为成人内容，已标记删除。")
                 keys_to_delete.append(key)
-                continue
-            if ADULT_FILTER_KEYWORD in name:
-                print(f"🗑️ 过滤: 源 '{name}' 包含成人内容关键词，已标记删除。")
-                keys_to_delete.append(key)
+            for adult in ADULT_FILTER_KEYWORD:
+                if adult in name:
+                    print(f"🗑️ 过滤: 源 '{name}' 包含成人内容关键词，已标记删除。")
+                    keys_to_delete.append(key)
     else:
         print("ℹ️ 成人内容过滤已禁用。")
 

@@ -6,12 +6,6 @@
       "detail": "https://iqiyizyapi.com",
       "is_adult": false
     },
-    "caijidb": {
-      "name": "🎬豆瓣资源",
-      "api": "https://caiji.dbzy5.com/api.php/provide/vod",
-      "detail": "dbzy.tv",
-      "is_adult": false
-    },
     "ckzy.me": {
       "name": "🎬CK资源",
       "api": "https://ckzy.me/api.php/provide/vod",
@@ -46,30 +40,6 @@
       "name": "🎬优质资源",
       "api": "https://api.yzzy-api.com/inc/apijson.php",
       "detail": "https://1080zyk4.com",
-      "is_adult": false
-    },
-    "myzy": {
-      "name": "🎬猫眼资源",
-      "api": "https://api.maoyanapi.top/api.php/provide/vod",
-      "detail": "https://www.maoyanzy.com",
-      "is_adult": false
-    },
-    "ruyi": {
-      "name": "🎬如意资源",
-      "api": "https://dl.hafrey.dpdns.org/?url=https://cj.rycjapi.com/api.php/provide/vod",
-      "detail": "https://www.ryzyw.com",
-      "is_adult": false
-    },
-    "zy360": {
-      "name": "🎬360资源",
-      "api": "https://360zy.com/api.php/provide/vod",
-      "detail": "https://360zy.com",
-      "is_adult": false
-    },
-    "collectwolongzy": {
-      "name": "🎬卧龙资源1",
-      "api": "https://collect.wolongzyw.com/api.php/provide/vod",
-      "detail": "https://collect.wolongzyw.com",
       "is_adult": false
     },
     "jisu": {
@@ -222,10 +192,6 @@
       "detail": "https://caiji.moduapi.cc",
       "is_adult": false
     },
-    "dbzy": {
-      "api": "https://dbzy.tv/api.php/provide/vod",
-      "name": "豆瓣资源"
-    },
     "xinlangaa": {
       "api": "https://api.xinlangapi.com/xinlangapi.php/provide/vod",
       "name": "新浪资源"
@@ -268,6 +234,14 @@
       "api": "https://dl.hafrey.dpdns.org/?url=https://mozhuazy.com/api.php/provide/vod",
       "detail": "https://mozhuazy.com",
       "is_adult": false
+    },
+    "mozhua": {
+      "api": "https://mozhuazy.com/api.php/provide/vod",
+      "name": "魔爪资源"
+    },
+    "bdzy": {
+      "api": "https://api.apibdzy.com/api.php/provide/vod",
+      "name": "百度资源"
     }
   }
 }
