@@ -25,7 +25,7 @@
 ![HLS.js](https://img.shields.io/badge/HLS.js-1.6.13-ec407a)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Docker Ready](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
-![Version](https://img.shields.io/badge/Version-5.5.4-orange)
+![Version](https://img.shields.io/badge/Version-5.5.6-orange)
 
 </div>
 
@@ -33,7 +33,7 @@
 
 ## 📢 Project Overview
 
-This project is a deeply customized version based on **MoonTV**, continuously developed from **v4.3.1** to the current **v5.5.4**, with **50+ major feature modules** and **300+ detailed optimizations** added. See [CHANGELOG](CHANGELOG) for all new features.
+This project is a deeply customized version based on **MoonTV**, continuously developed from **v4.3.1** to the current **v5.5.6**, with **50+ major feature modules** and **300+ detailed optimizations** added. See [CHANGELOG](CHANGELOG) for all new features.
 
 ### 💡 Core Enhancement Highlights
 
@@ -41,7 +41,7 @@ This project is a deeply customized version based on **MoonTV**, continuously de
 - **YouTube Integration**: Complete YouTube search, playback, live streaming with cookieless domain support
 - **Cloud Drive Search (PanSou)**: Integrated advanced filtering and cache management
 - **Short Drama Features**: Search, playback, dedicated detail pages, mobile API proxy
-- **IPTV Live TV**: m3u/m3u8 subscriptions, EPG program guide, source aggregation, logo proxy
+- **IPTV Live TV**: m3u/m3u8 subscriptions, EPG program guide (multi-source & url-tvg support), source aggregation, logo proxy, channel search within current source
 - **Bangumi Anime**: Intelligent anime detection, API integration, caching mechanism
 
 #### 🤖 AI Recommendation System
@@ -51,34 +51,45 @@ This project is a deeply customized version based on **MoonTV**, continuously de
 - **Release Calendar**: Upcoming content preview and tracking
 
 #### 💬 Danmaku Ecosystem
-- **Third-party Danmaku API**: Integrated Tencent Video, iQiyi, Youku, Bilibili platforms
-- **Smart Performance Optimization**: Device-based tiered rendering, Web Worker acceleration
+- **Third-party Danmaku API**: Integrated Tencent Video, iQiyi, Youku, Bilibili platforms, smart content matching prevents trailers
+- **Smart Performance Optimization**: Device-based tiered rendering, Web Worker acceleration, hardware acceleration
 - **Complete Configuration System**: Font size, speed, opacity, display area, anti-overlap adjustments
-- **Smart Caching**: localStorage persistence, 30-minute cache, auto cleanup
+- **Smart Caching**: localStorage persistence, 30-minute cache, auto cleanup of expired data
+- **Web-exclusive Input**: Simple "Danmu" button for quick sending (auto-hidden on mobile)
 
 #### 📊 User Management Enhancement
 - **User Level System**: Replaces large login count numbers with friendly level display
-- **Playback Statistics**: Complete viewing data statistics, analysis, visualization
+- **Playback Statistics**: Complete viewing data statistics, analysis, visualization, global/personal stats tab switching
+- **Dual Reminder System**: New episodes (red theme) and continue watching (blue theme) with gradient badges and halo effects
 - **User Group Permissions**: Fine-grained permission control for AI Assistant, YouTube features
 - **Inactive User Cleanup**: Smart auto-cleanup with detailed configuration and logging
 
 #### 🎮 Player Feature Enhancement
-- **Chromecast Casting**: Smart browser detection, excludes vendor browsers
-- **iPad/iOS Optimization**: HLS.js official source optimization, smart device detection, multi-attempt autoplay
-- **Mobile Adaptation**: Precise danmaku panel positioning, volume control optimization, responsive controller
-- **Skip Intro/Outro**: Smart detection and auto-skip, user configurable
+- **Chromecast Casting**: Smart browser detection, auto-excludes OPPO, Xiaomi, Huawei, Samsung vendor browsers
+- **iPad/iOS Optimization**: HLS.js official source optimization, smart device detection, multi-attempt autoplay strategy
+- **Skip Intro/Outro**: Real-time marking button, draggable floating config window, remaining time mode, position persistence
+- **Mobile Optimization**: Volume control hover optimization, responsive controller, danmaku config desktop-only display
+- **Episode Group Scrolling**: Playback page episode selection supports scroll pagination for smooth browsing
 
 #### 📱 Interface Experience Optimization
-- **Virtual Scrolling**: react-window 2.2.0, smooth loading for massive content
+- **Virtual Scrolling**: react-window 2.2.0, smooth loading for massive content, smart container size detection (ResizeObserver)
+- **Virtual Scrolling Toggle**: Gradient styles, icons, animations, user switchable display modes
+- **Responsive Grid**: 2-8 column adaptive, auto-calculated optimal layout
 - **Douban Details Enhancement**: Complete rating, cast & crew, premiere date, duration, production info
-- **User Menu Features**: Update reminders, continue watching, favorites quick access
+- **User Menu Features**: Update reminders, continue watching (with new episode badges), favorites quick access, TVBox settings integration
 - **Login Interface Modernization**: Dynamic random wallpapers, gradient cards, responsive design
+- **Back to Top Button**: Quick return for long pages like release calendar
 
 #### 🔐 Security & Storage
-- **TVBox Security Integration**: IP whitelist, Token authentication, full API compatibility
+- **TVBox Complete Ecosystem**:
+  - IP whitelist, Token authentication, full API compatibility
+  - Deep JAR diagnostic system (file header verification, smart health check)
+  - Spider management system (multi-Spider JAR backup sources, fallback proxy, gaotianliuyun third backup source)
+  - Regular user access support (`/api/tvbox-config` endpoint)
 - **Calendar Cache Migration**: Migrated from localStorage to database, cross-device sync support
 - **Cache Optimization**: Unified cache management (YouTube, cloud drive, Douban, danmaku)
 - **Enhanced Storage Modes**: Full Kvrocks/Redis/Upstash support, memory cache prevents QuotaExceededError
+- **User Registration System** (configurable toggle)
 
 ---
 
@@ -87,7 +98,10 @@ This project is a deeply customized version based on **MoonTV**, continuously de
 ### 📦 Project Status
 
 - **Notice**: After deployment, this is an **empty shell project** with **no built-in video sources or live streaming sources**. You need to collect and configure them yourself.
-- **Demo Site**: [https://lunatv.smone.us](https://lunatv.smone.us) for short-term testing. Database is cleaned regularly.
+- **Demo Sites**:
+  - Zeabur Deployment: [https://smonetv.zeabur.app](https://smonetv.zeabur.app)
+  - Vercel Deployment: [https://lunatv.smone.us](https://lunatv.smone.us)
+  - For short-term testing. Database is cleaned regularly.
 
 ### 🚫 Distribution Restrictions
 
@@ -106,12 +120,12 @@ This project is licensed under **CC BY-NC-SA 4.0**, with the following terms:
 ## ✨ Complete Feature List
 
 ### 🎬 Content Aggregation
-- ✅ Multi-source video aggregation search (streaming output, smart variants)
-- ✅ YouTube integration (search, live streaming, iframe playback)
-- ✅ Cloud drive search (PanSou integration, advanced filtering)
-- ✅ Short drama features (search, playback, dedicated detail pages)
-- ✅ IPTV live TV (m3u subscriptions, EPG guide, source aggregation)
-- ✅ Bangumi anime (info detection, API integration)
+- ✅ Multi-source video aggregation search (streaming output, smart variants, language-aware filtering)
+- ✅ YouTube integration (search, live streaming, iframe playback, time filtering & sorting)
+- ✅ Cloud drive search (PanSou integration, advanced filtering, cache management)
+- ✅ Short drama features (search, playback, dedicated detail pages, mobile API proxy)
+- ✅ IPTV live TV (m3u subscriptions, EPG guide, multi-source support, url-tvg, source aggregation, channel search)
+- ✅ Bangumi anime (info detection, API integration, 3-6 digit ID support)
 - ✅ TMDB actor search (filtering, caching)
 
 ### 🤖 Smart Recommendations
@@ -121,50 +135,64 @@ This project is licensed under **CC BY-NC-SA 4.0**, with the following terms:
 - ✅ Smart search optimization (language-aware, fuzzy matching)
 
 ### 💬 Danmaku System
-- ✅ Third-party danmaku API (Tencent, iQiyi, Youku, Bilibili)
-- ✅ Smart performance optimization (device tiering, Web Worker)
-- ✅ Complete configuration (font size, speed, opacity, display area)
-- ✅ Smart caching (localStorage, 30-min expiry)
-- ✅ Danmaku input (web-only button)
+- ✅ Third-party danmaku API (Tencent, iQiyi, Youku, Bilibili, caiji.cyou multi-platform aggregation)
+- ✅ Smart content matching (auto-filter commentary, trailers, irrelevant content)
+- ✅ Smart performance optimization (device tiering, Web Worker, hardware acceleration, segmented loading)
+- ✅ Complete configuration (font size, speed, opacity, display area, anti-overlap, type masking)
+- ✅ Smart caching (localStorage, 30-min expiry, page refresh persistence)
+- ✅ Danmaku input (web-only "Danmu" button, auto-hidden on mobile)
+- ✅ EXT-X-MEDIA URI handling (prevents HLS audio track loading errors)
 
 ### 📊 User Management
-- ✅ User level system
-- ✅ Playback statistics (watch time, video count, recent records)
+- ✅ User level system (replaces large login count numbers)
+- ✅ Playback statistics (watch time, video count, recent records, global/personal tab switching)
+- ✅ Dual reminder system (new episodes red theme, continue watching blue theme, gradient badges)
+- ✅ VideoCard watch update display (replaces popup-style updates)
 - ✅ User group permissions (AI, YouTube feature control)
-- ✅ Inactive user auto-cleanup
-- ✅ Login time tracking
+- ✅ Inactive user auto-cleanup (smart config, logging)
+- ✅ Login time tracking (enhanced admin analytics)
 
 ### 🎮 Player Enhancement
-- ✅ Chromecast casting
-- ✅ iPad/iOS optimization (HLS.js config, autoplay)
-- ✅ Danmaku panel (mobile precise positioning)
-- ✅ Volume control optimization
-- ✅ Skip intro/outro
-- ✅ Episode switching optimization (debounce, state management)
+- ✅ Chromecast casting (smart browser detection, excludes vendor browsers)
+- ✅ iPad/iOS optimization (HLS.js official source optimization, smart device detection, multi-attempt autoplay retry)
+- ✅ Skip intro/outro (real-time marking button, draggable floating window, remaining time mode, cross-episode support)
+- ✅ Danmaku config panel (desktop display, mobile hidden)
+- ✅ Volume control optimization (hover area optimization, precise detection)
+- ✅ Episode switching optimization (debounce, state management, correct playback time reset)
+- ✅ Episode group scroll pagination (smooth browsing for large episode counts)
 
 ### 🎨 Interface Experience
-- ✅ Virtual scrolling (react-window 2.2.0)
-- ✅ Responsive grid (2-8 column adaptive)
-- ✅ User menu enhancement (update reminders, continue watching, favorites)
-- ✅ Login/register modernization (dynamic wallpapers, gradient cards)
-- ✅ Mobile bottom navigation
-- ✅ Back to top button
+- ✅ Virtual scrolling (react-window 2.2.0, ResizeObserver smart detection, progressive loading)
+- ✅ Virtual scrolling toggle (gradient styles, icons, animations, user switchable)
+- ✅ Responsive grid (2-8 column adaptive, actual container width dynamic calculation)
+- ✅ Douban details enhancement (rating, cast & crew, premiere date, duration, production info)
+- ✅ User menu enhancement (update reminders, continue watching with new episode badges, favorites quick access, TVBox settings)
+- ✅ Login/register modernization (dynamic random wallpapers, gradient cards, responsive design)
+- ✅ Back to top button (long pages like release calendar)
+- ✅ Completed series badges (based on vod_remarks, search API priority)
+- ✅ Search result filtering (source, title, year filtering, year sorting)
+- ✅ Video card right-click/long-press menu (new tab play, favorites, etc.)
 
 ### 🔐 Security & Storage
-- ✅ TVBox full API (IP whitelist, Token auth)
-- ✅ Calendar cache database migration
-- ✅ Unified cache management system
-- ✅ Kvrocks/Redis/Upstash storage
-- ✅ Memory cache prevents QuotaExceededError
-- ✅ User registration system (configurable toggle)
+- ✅ TVBox complete ecosystem (IP whitelist, Token auth, full API compatibility, regular user access)
+- ✅ TVBox deep diagnostics (JAR file header verification, smart health check, config field display)
+- ✅ Spider management system (multi-JAR backup sources, fallback proxy, gaotianliuyun third backup source)
+- ✅ Calendar cache database migration (cross-device sync)
+- ✅ Unified cache management system (YouTube, cloud drive, Douban, danmaku)
+- ✅ Kvrocks/Redis/Upstash storage (full compatibility handling)
+- ✅ Memory cache prevents QuotaExceededError (Kvrocks/Upstash memory cache)
+- ✅ User registration system (configurable toggle, admin user creation)
+- ✅ Cross-device original episode tracking (prevents API cache issues)
 
 ### 🛠️ Technical Optimization
-- ✅ ArtPlayer 5.3.0 + HLS.js 1.6.13
-- ✅ Danmaku plugin 5.2.0 (Web Worker acceleration)
-- ✅ Next.js SSR compatibility
-- ✅ Docker build optimization
-- ✅ TypeScript type safety
-- ✅ Semantic versioning
+- ✅ ArtPlayer 5.3.0 + HLS.js 1.6.13 (official source optimization)
+- ✅ Danmaku plugin 5.2.0 (Web Worker acceleration, useWorker: true, lockTime: 2)
+- ✅ Next.js SSR compatibility (dynamic import, client-side loading)
+- ✅ Docker build optimization (no-cache flag, dependency verification)
+- ✅ TypeScript type safety (const assertion, type annotations)
+- ✅ Semantic versioning (Git tag-based, CHANGELOG auto-extraction)
+- ✅ HLS.js mobile optimization (buffer strategy, memory management, ABR optimization)
+- ✅ Douban details engine refactor (accurate parsing based on real HTML structure)
 
 ---
 
@@ -173,6 +201,7 @@ This project is licensed under **CC BY-NC-SA 4.0**, with the following terms:
 - [Tech Stack](#-tech-stack)
 - [Deployment](#-deployment)
   - [Docker Deployment (Recommended)](#-recommended-kvrocks-storage)
+  - [Zeabur Deployment (Recommended)](#️-zeabur-deployment-recommended)
   - [Vercel Deployment (Serverless)](#-vercel-deployment-serverless)
 - [Configuration File](#️-configuration-file)
 - [Environment Variables](#-environment-variables)
@@ -205,6 +234,26 @@ This project is licensed under **CC BY-NC-SA 4.0**, with the following terms:
 ---
 
 ## 🚀 Deployment
+
+### ⚡ One-Click Deploy to Zeabur (Easiest)
+
+Click the button below for one-click deployment, automatically configures LunaTV + Kvrocks database:
+
+[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/2425O0/deploy)
+
+**Advantages**:
+- ✅ Zero configuration, instant startup (auto-deploy complete environment)
+- ✅ Automatic HTTPS and global CDN acceleration
+- ✅ Persistent storage, data never lost
+- ✅ Free tier sufficient for personal use
+
+**⚠️ Important Notice**: After deployment completes, you need to set up an access domain (Domain) for the LunaTV service in Zeabur before you can access it in your browser. See the [Set Up Access Domain](#5-set-up-access-domain-required) step below for details.
+
+After clicking the button, just fill in the environment variables to complete deployment! See [Zeabur Deployment Guide](#️-zeabur-deployment-recommended) below for details.
+
+---
+
+### 🐳 Docker Self-Hosted Deployment
 
 This project **only supports Docker or Docker-based platforms** (such as Dockge, Portainer, Komodo, etc.).
 
@@ -310,6 +359,111 @@ services:
       - UPSTASH_URL=https://your-instance.upstash.io
       - UPSTASH_TOKEN=your_upstash_token
 ```
+
+### ☁️ Zeabur Deployment (Recommended)
+
+Zeabur is a one-stop cloud deployment platform. Using pre-built Docker images allows for quick deployment without waiting for builds.
+
+**Deployment Steps:**
+
+1. **Add KVRocks Service** (Add database first)
+   - Click "Add Service" > "Docker Images"
+   - Enter image name: `apache/kvrocks`
+   - Configure port: `6666` (TCP)
+   - **Remember the service name** (usually `apachekvrocks`)
+   - **Configure Persistent Volume (Important)**:
+     * Find "Volumes" section in service settings
+     * Click "Add Volume" to add new volume
+     * Volume ID: `kvrocks-data` (customizable, only letters, numbers, and hyphens)
+     * Path: `/var/lib/kvrocks/db`
+     * Save configuration
+
+   > 💡 **Important**: Persistent volume path must be set to `/var/lib/kvrocks/db` (KVRocks data directory). This keeps config files in the container while persisting database files, preventing data loss on restart!
+
+2. **Add LunaTV Service**
+   - Click "Add Service" > "Docker Images"
+   - Enter image name: `ghcr.io/szemeng76/lunatv:latest`
+   - Configure port: `3000` (HTTP)
+
+3. **Configure Environment Variables**
+
+   Add the following environment variables to your LunaTV service:
+
+   ```env
+   # Required: Admin Account
+   USERNAME=admin
+   PASSWORD=your_secure_password
+
+   # Required: Storage Configuration
+   NEXT_PUBLIC_STORAGE_TYPE=kvrocks
+   KVROCKS_URL=redis://apachekvrocks:6666
+
+   # Optional: Site Configuration
+   SITE_BASE=https://your-domain.zeabur.app
+   NEXT_PUBLIC_SITE_NAME=LunaTV Enhanced
+   ANNOUNCEMENT=Welcome to LunaTV Enhanced Edition
+
+   # Optional: Douban Proxy (Recommended)
+   NEXT_PUBLIC_DOUBAN_PROXY_TYPE=cmliussss-cdn-tencent
+   NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE=cmliussss-cdn-tencent
+   ```
+
+   **Note**:
+   - Use service name as hostname: `redis://apachekvrocks:6666`
+   - Replace with actual service name if different
+   - Both services must be in the same Project
+
+4. **Deployment Complete**
+   - Zeabur will automatically pull images and start services
+   - After services are ready, you need to manually set up an access domain (see next step)
+
+#### 5. Set Up Access Domain (Required)
+
+   - In the LunaTV service page, click the "Networking" or "Network" tab
+   - Click "Generate Domain" to create a free Zeabur domain (e.g., `xxx.zeabur.app`)
+   - Or bind a custom domain:
+     * Click "Add Domain" to add your domain
+     * Follow the prompts to configure DNS CNAME record pointing to the Zeabur-provided target
+   - Once the domain is set up, you can access LunaTV through the domain
+
+6. **Bind Custom Domain (Optional)**
+   - In service settings, click "Domains"
+   - Add your custom domain
+   - Configure DNS CNAME record to point to the Zeabur-provided domain
+
+#### 🔄 Updating Docker Images
+
+When a new Docker image version is released, Zeabur won't automatically update. Manual trigger is required.
+
+**Update Steps:**
+
+1. **Enter Service Page**
+   - Click on the service you want to update (LunaTV or KVRocks)
+
+2. **Restart Service**
+   - Click the **"Restart"** button in the top right corner
+   - Zeabur will automatically pull the latest `latest` image and redeploy
+
+> 💡 **Tips**:
+> - When using `latest` tag, Restart will automatically pull the latest image
+> - For production environments, it's recommended to use fixed version tags (e.g., `v5.5.5`) to avoid unexpected updates
+
+#### ✨ Zeabur Deployment Advantages
+
+- ✅ **Automatic HTTPS**: Free SSL certificate auto-configured
+- ✅ **Global CDN**: Built-in worldwide acceleration
+- ✅ **Zero-Config Deployment**: Automatic Dockerfile detection
+- ✅ **Service Discovery**: Containers communicate via service names automatically
+- ✅ **Persistent Storage**: Volume mounting support
+- ✅ **CI/CD Integration**: Auto-deployment on Git push
+- ✅ **Real-time Logs**: Web interface for runtime logs
+
+#### ⚠️ Zeabur Considerations
+
+- **Pricing Model**: Pay-as-you-go based on actual resource usage, free tier sufficient for small projects
+- **Region Selection**: Recommend choosing the region closest to your users
+- **Service Networking**: Services in the same Project communicate via service names (e.g., `apachekvrocks:6666`)
+- **Persistent Storage**: KVRocks must configure persistent volume to `/var/lib/kvrocks/db` directory, otherwise data will be lost on restart
 
 ---
 
@@ -702,21 +856,33 @@ This project works with [OrionTV](https://github.com/zimplexing/OrionTV) on Andr
 
 For complete feature updates and bug fixes, see [CHANGELOG](CHANGELOG).
 
-### Latest Version: v5.5.4 (2025-10-03)
+### Latest Version: v5.5.6 (2025-10-08)
 
 #### Added
-- 🔐 TVBox regular user access support
-- 🎨 Modernized login/register interface
-- 💾 Calendar cache database migration
+- 🎯 Skip intro/outro real-time marking button: Interactive button for real-time marking of intro/outro time points
+- 🎮 Draggable skip config floating window: Draggable floating window component with touch support and position persistence
+- 📱 Mobile skip settings button display: Fixed display issue on mobile devices
+- 🎬 Outro remaining time mode cross-episode support: Correct handling of remaining time mode when switching episodes
+- 📊 Continue watching card completion badges: Added completion badges for all continue watching sections
+- 🔍 TVBox deep JAR diagnostics: JAR file header verification and smart health check system
 
 #### Improved
-- 📊 Frontend database cache optimization
-- 📦 Upgraded react-window to v2.2.0
+- 📐 Draggable skip config window boundary limits: Optimized drag boundary limits and position persistence
+- 🎨 Zeabur deployment guide simplification: Simplified to Docker image only, removed complex GitHub integration
+- 📝 Zeabur deployment guide KVRocks config correction: Fixed persistence path from `/data` to `/var/lib/kvrocks/db`
+- 🌐 Zeabur one-click deployment template link update
+- 🏠 Zeabur post-deployment domain setup reminder: Added important reminder to set access domain after deployment
+- 📚 README anchor link fixes: Fixed anchor links in "Set Access Domain" section
 
 #### Fixed
-- 🔄 Fixed original episodes update logic
-- 🗄️ Upstash object deserialization support
-- 🚫 Eliminated Next.js dynamic route warnings
+- 🔧 original_episodes corruption and infinite API request protection
+- 🛡️ Episode detection auto original_episodes update protection
+- 📝 Episode update detection original_episodes overwrite protection
+- 🎬 Outro skip remaining time mode cross-episode fixes (multiple optimizations)
+- 🔄 KVRocks skip config first load issue
+- 📊 Skip config architecture refactor: New skip config design for more stable intro/outro skip functionality
+- 🎯 Continue watching card flicker optimization: Prevent flicker by sorting updatedSeries
+- 🌐 Zeabur deployment guide and demo site updates
 
 ### Major Milestone Versions
 
