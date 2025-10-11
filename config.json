@@ -15,11 +15,6 @@
       "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
       "detail": "https://mtzy.me"
     },
-    "wolong": {
-      "name": "🎬卧龙资源",
-      "api": "https://wolongzyw.com/api.php/provide/vod",
-      "detail": "https://wolongzyw.com"
-    },
     "ikun": {
       "name": "🎬iKun资源",
       "api": "https://ikunzyapi.com/api.php/provide/vod",
@@ -224,11 +219,6 @@
       "name": "🎬如意资源",
       "api": "https://jjpz.hafrey.dpdns.org/?url=https://cj.rycjapi.com/api.php/provide/vod",
       "detail": "https://www.ryzyw.com"
-    },
-    "collectwolongzy": {
-      "name": "🎬卧龙资源1",
-      "api": "https://collect.wolongzyw.com/api.php/provide/vod",
-      "detail": "https://collect.wolongzyw.com"
     },
     "shandian": {
       "name": "🎬闪电资源",
