@@ -201,11 +201,6 @@
       "api": "https://360zy.com/api.php/provide/vod",
       "detail": "https://360zy.com"
     },
-    "myzy": {
-      "name": "🎬猫眼资源",
-      "api": "https://api.maoyanapi.top/api.php/provide/vod",
-      "detail": "https://www.maoyanzy.com"
-    },
     "caijidb": {
       "name": "🎬豆瓣资源",
       "api": "https://caiji.dbzy5.com/api.php/provide/vod",
