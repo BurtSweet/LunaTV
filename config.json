@@ -100,11 +100,6 @@
       "api": "https://api.wwzy.tv/api.php/provide/vod",
       "detail": "https://api.wwzy.tv"
     },
-    "hhzyapi": {
-      "name": "🎬豪华资源",
-      "api": "https://hhzyapi.com/api.php/provide/vod",
-      "detail": "https://www.haohuazy.com"
-    },
     "huyaapi": {
       "name": "🎬虎牙资源",
       "api": "https://www.huyaapi.com/api.php/provide/vod/at/json",
