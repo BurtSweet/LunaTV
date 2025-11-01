@@ -5,11 +5,6 @@
       "api": "https://iqiyizyapi.com/api.php/provide/vod",
       "detail": "https://iqiyizyapi.com"
     },
-    "ckzy.me": {
-      "name": "🎬CK资源",
-      "api": "https://ckzy.me/api.php/provide/vod",
-      "detail": "https://ckzy.me"
-    },
     "maotaizy": {
       "name": "🎬茅台资源",
       "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
@@ -175,11 +170,6 @@
       "name": "🎬天涯影视",
       "api": "https://tyyszy.com/api.php/provide/vod",
       "detail": "https://tyyszy.com"
-    },
-    "mozhuazy": {
-      "name": "🎬魔爪资源",
-      "api": "https://jjpz.hafrey.dpdns.org/?url=https://mozhuazy.com/api.php/provide/vod",
-      "detail": "https://mozhuazy.com"
     },
     "caijidb": {
       "name": "🎬豆瓣资源",
