@@ -11,9 +11,7 @@ REQUEST_TIMEOUT = 10
 CONFIG_FILE = "config.json"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
 SUBSCRIPTION_URLS = [
-    r'https://gist.githubusercontent.com/senshinya/5a5cb900dfa888fd61d767530f00fc48/raw/gistfile1.txt',
-    r'https://raw.githubusercontent.com/hafrey1/LunaTV-config/main/LunaTV-config.txt', #完整
-    #r'https://raw.githubusercontent.com/hafrey1/LunaTV-config/main/jinhuang.txt' #无黄
+    r'https://raw.githubusercontent.com/hafrey1/LunaTV-config/refs/heads/main/LunaTV-config.txt',
 
 ]
 # 成人内容过滤关键词,识别源的名称中包含该关键词的源
@@ -238,4 +236,5 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         print(f"\n❌ 脚本发生致命错误: {e}", file=sys.stderr)
+
         sys.exit(1)
