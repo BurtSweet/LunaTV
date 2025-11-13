@@ -110,16 +110,6 @@
       "api": "https://p2100.net/api.php/provide/vod",
       "detail": "https://p2100.net"
     },
-    "uku": {
-      "name": "🎬U酷资源",
-      "api": "https://jjpz.hafrey.dpdns.org/?url=https://api.ukuapi.com/api.php/provide/vod",
-      "detail": "https://api.ukuapi.com"
-    },
-    "ukuapi88": {
-      "name": "🎬U酷88",
-      "api": "https://jjpz.hafrey.dpdns.org/?url=https://api.ukuapi88.com/api.php/provide/vod",
-      "detail": "https://api.ukuapi88.com"
-    },
     "guangsuapi": {
       "api": "https://api.guangsuapi.com/api.php/provide/vod",
       "name": "🎬光速资源",
