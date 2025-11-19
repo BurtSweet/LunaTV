@@ -322,6 +322,31 @@
       "name": "🎬茅台资源",
       "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
       "detail": "https://mtzy.me"
+    },
+    "wolongzyw.com": {
+      "name": "🎬卧龙资源",
+      "api": "https://wolongzyw.com/api.php/provide/vod",
+      "detail": "https://wolongzyw.com"
+    },
+    "dyttzyapi.com": {
+      "name": "🎬电影天堂",
+      "api": "http://caiji.dyttzyapi.com/api.php/provide/vod",
+      "detail": "http://caiji.dyttzyapi.com"
+    },
+    "collect.wolongzyw.com": {
+      "name": "🎬卧龙影视",
+      "api": "https://collect.wolongzyw.com/api.php/provide/vod",
+      "detail": "https://collect.wolongzyw.com"
+    },
+    "ffzyapi.com": {
+      "name": "🎬非凡资源",
+      "api": "https://api.ffzyapi.com/api.php/provide/vod",
+      "detail": "https://cj.ffzyapi.com"
+    },
+    "1080zyk4.com": {
+      "name": "🎬优质资源",
+      "api": "https://api.yzzy-api.com/inc/apijson.php",
+      "detail": "https://1080zyk4.com"
     }
   }
 }
