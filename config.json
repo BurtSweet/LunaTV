@@ -249,26 +249,31 @@
       "detail": "https://zy.sh0o.cn"
     },
     "yhzy.cc": {
+      "_comment": " 403 Forbidden ",
       "name": "🎬樱花资源",
       "api": "https://m3u8.apiyhzy.com/api.php/provide/vod",
       "detail": "https://yhzy.cc"
     },
     "www.huyaapi.com": {
+      "_comment": "污染搜索结果",
       "name": "🎬虎牙资源",
       "api": "https://www.huyaapi.com/api.php/provide/vod",
       "detail": "https://www.huyaapi.com"
     },
     "suonizy.net": {
+      "_comment": "暂不支持搜索",
       "name": "🎬索尼资源",
       "api": "https://suoniapi.com/api.php/provide/vod",
       "detail": "https://suonizy.net"
     },
     "kuaichezy.com": {
+      "_comment": "暂不支持搜索",
       "name": "🎬快车资源",
       "api": "https://caiji.kuaichezy.org/api.php/provide/vod",
       "detail": "https://kuaichezy.com"
     },
     "shandianzy.com": {
+      "_comment": "暂不支持搜索",
       "name": "🎬闪电资源",
       "api": "https://xsd.sdzyapi.com/api.php/provide/vod",
       "detail": "https://shandianzy.com"
@@ -309,6 +314,7 @@
       "detail": "https://cj.ffzyapi.com"
     },
     "1080zyk4.com": {
+      "_comment": "JSON 里所有中文字符为 Unicode 编码",
       "name": "🎬优质资源",
       "api": "https://api.yzzy-api.com/inc/apijson.php",
       "detail": "https://1080zyk4.com"
@@ -327,6 +333,17 @@
       "name": "🎬速播资源",
       "api": "https://subocaiji.com/api.php/provide/vod",
       "detail": "https://www.subozy.com"
+    },
+    "zy.jinchancaiji.com": {
+      "name": "🎬金蝉影视",
+      "api": "https://zy.jinchancaiji.com/api.php/provide/vod",
+      "detail": "https://zy.jinchancaiji.com"
+    },
+    "yayazy3.com": {
+      "_comment": "暂不支持搜索",
+      "name": "🎬鸭鸭资源",
+      "api": "https://cj.yayazy.net/api.php/provide/vod",
+      "detail": "https://yayazy3.com"
     }
   }
 }
