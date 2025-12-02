@@ -99,11 +99,6 @@
       "name": "CK资源",
       "detail": "https://ckzy.me"
     },
-    "ukuapi": {
-      "api": "https://api.ukuapi.com/api.php/provide/vod",
-      "name": "U酷资源",
-      "detail": "https://api.ukuapi.com"
-    },
     "1080zyk": {
       "api": "https://api.1080zyku.com/inc/apijson.php/",
       "name": "1080资源",
@@ -226,11 +221,6 @@
       "api": "https://p2100.net/api.php/provide/vod",
       "detail": "https://p2100.net"
     },
-    "api.ukuapi88.com": {
-      "name": "🎬U酷影视",
-      "api": "https://api.ukuapi88.com/api.php/provide/vod",
-      "detail": "https://www.ukuzy.com"
-    },
     "api.guangsuapi.com": {
       "name": "🎬光速资源",
       "api": "https://api.guangsuapi.com/api.php/provide/vod",
@@ -339,6 +329,11 @@
       "name": "🎬鸭鸭资源",
       "api": "https://cj.yayazy.net/api.php/provide/vod",
       "detail": "https://yayazy3.com"
+    },
+    "www.hongniuzy.com": {
+      "name": "🎬红牛资源",
+      "api": "https://www.hongniuzy2.com/api.php/provide/vod",
+      "detail": "https://www.hongniuzy.com"
     }
   }
 }
