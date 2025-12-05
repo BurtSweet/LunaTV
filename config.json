@@ -318,12 +318,6 @@
       "api": "https://subocaiji.com/api.php/provide/vod",
       "detail": "https://www.subozy.com"
     },
-    "zy.jinchancaiji.com": {
-      "_comment": "无搜索结果",
-      "name": "🎬金蝉影视",
-      "api": "https://zy.jinchancaiji.com/api.php/provide/vod",
-      "detail": "https://zy.jinchancaiji.com"
-    },
     "yayazy3.com": {
       "_comment": "暂不支持搜索",
       "name": "🎬鸭鸭资源",
