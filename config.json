@@ -333,6 +333,12 @@
       "name": "🎬U酷影视",
       "api": "https://api.ukuapi88.com/api.php/provide/vod",
       "detail": "https://www.ukuzy.com"
+    },
+    "zy.jinchancaiji.com": {
+      "_comment": "无搜索结果",
+      "name": "🎬金蝉影视",
+      "api": "https://zy.jinchancaiji.com/api.php/provide/vod",
+      "detail": "https://zy.jinchancaiji.com"
     }
   }
 }
