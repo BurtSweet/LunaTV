@@ -212,7 +212,7 @@ async function getInitConfig(configFile: string, subConfig: {
         process.env.NEXT_PUBLIC_DOUBAN_PROXY_TYPE || 'direct',
       DoubanProxy: process.env.NEXT_PUBLIC_DOUBAN_PROXY || '',
       DoubanImageProxyType:
-        process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE || 'direct',
+        process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE || 'server',
       DoubanImageProxy: process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY || '',
       DisableYellowFilter:
         process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true',
@@ -407,6 +407,15 @@ export async function configSelfCheck(adminConfig: AdminConfig): Promise<AdminCo
       maxResults: 25,                                   // 默认每页25个结果
       enabledRegions: ['US', 'CN', 'JP', 'KR', 'GB', 'DE', 'FR'], // 默认启用的地区
       enabledCategories: ['Film & Animation', 'Music', 'Gaming', 'News & Politics', 'Entertainment'] // 默认启用的分类
+    };
+  }
+
+  // 确保短剧配置有默认值
+  if (!adminConfig.ShortDramaConfig) {
+    adminConfig.ShortDramaConfig = {
+      primaryApiUrl: 'https://api.r2afosne.dpdns.org',  // 默认主API
+      alternativeApiUrl: '',                            // 默认为空，需要管理员配置
+      enableAlternative: false,                         // 默认关闭备用API
     };
   }
 
