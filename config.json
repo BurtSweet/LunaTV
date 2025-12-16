@@ -94,11 +94,6 @@
       "api": "https://api.xinlangapi.com/xinlangapi.php/provide/vod",
       "name": "新浪资源"
     },
-    "ckzy": {
-      "api": "https://ckzy.me/api.php/provide/vod",
-      "name": "CK资源",
-      "detail": "https://ckzy.me"
-    },
     "1080zyk": {
       "api": "https://api.1080zyku.com/inc/apijson.php/",
       "name": "1080资源",
@@ -155,7 +150,7 @@
     },
     "360zy.com": {
       "name": "🎬360 资源",
-      "api": "https://360zy.com/api.php/provide/vod",
+      "api": "https://360zyzz.com/api.php/provide/vod",
       "detail": "https://360zy.com"
     },
     "jszyapi.com": {
