@@ -113,11 +113,6 @@
       "api": "https://xsd.sdzyapi.com/api.php/provide/vod",
       "detail": "https://shandianzy.com"
     },
-    "myzy": {
-      "name": "🎬猫眼资源",
-      "api": "https://api.maoyanapi.top/api.php/provide/vod",
-      "detail": "https://www.maoyanzy.com"
-    },
     "shzy": {
       "name": "🎬山海资源",
       "api": "https://zy.sh0o.cn/api.php/provide/vod",
@@ -142,11 +137,6 @@
       "name": "🎬iKun资源",
       "api": "https://ikunzyapi.com/api.php/provide/vod",
       "detail": "https://ikunzy.com"
-    },
-    "www.maoyanzy.com": {
-      "name": "🎬猫眼资源",
-      "api": "https://api.maoyanapi.top/api.php/provide/vod",
-      "detail": "https://www.maoyanzy.com"
     },
     "360zy.com": {
       "name": "🎬360 资源",
