@@ -21,28 +21,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const {
-      enabled,
-      downloadDir,
-      enableClientDownload,
-      enableServerDownload,
-      maxConcurrentDownloads,
-      segmentConcurrency,
-      maxRetries,
-    } = body;
+    const { enabled } = body;
 
     // 获取当前配置
     const config = await getConfig();
 
-    // 更新离线下载配置
-    config.OfflineDownloadConfig = {
-      enabled: enabled ?? false,
-      downloadDir: downloadDir || './data/downloads',
-      enableClientDownload: enableClientDownload ?? true,
-      enableServerDownload: enableServerDownload ?? false,
-      maxConcurrentDownloads: maxConcurrentDownloads || 3,
-      segmentConcurrency: segmentConcurrency || 6,
-      maxRetries: maxRetries || 3,
+    // 更新下载配置
+    config.DownloadConfig = {
+      enabled: enabled ?? true,
     };
 
     // 保存到数据库
@@ -51,15 +37,15 @@ export async function POST(request: NextRequest) {
     // 清除配置缓存
     clearConfigCache();
 
-    console.log('离线下载配置已更新:', config.OfflineDownloadConfig);
+    console.log('下载配置已更新:', config.DownloadConfig);
 
     return NextResponse.json({
       success: true,
-      message: '离线下载配置保存成功',
-      config: config.OfflineDownloadConfig,
+      message: '下载配置保存成功',
+      config: config.DownloadConfig,
     });
   } catch (error) {
-    console.error('保存离线下载配置失败:', error);
+    console.error('保存下载配置失败:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : '保存失败',
