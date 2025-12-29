@@ -1,10 +1,5 @@
 {
   "api_site": {
-    "aqyzy": {
-      "name": "🎬爱奇艺",
-      "api": "https://iqiyizyapi.com/api.php/provide/vod",
-      "detail": "https://iqiyizyapi.com"
-    },
     "jisu": {
       "name": "🎬极速资源",
       "api": "https://jszyapi.com/api.php/provide/vod",
