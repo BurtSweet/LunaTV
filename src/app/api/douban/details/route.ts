@@ -3,19 +3,76 @@ import { NextResponse } from 'next/server';
 
 import { getCacheTime } from '@/lib/config';
 
-// 用户代理池
+// 用户代理池 - 2025 最新版本（多浏览器策略）
 const USER_AGENTS = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  // Chrome 133 (2025最新)
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+  // Firefox 133 (2025最新)
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:133.0) Gecko/20100101 Firefox/133.0',
+  // Safari 18 (2025最新)
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+  // Edge 133 (2025最新)
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0',
 ];
 
 // 请求限制器
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 2000; // 2秒最小间隔
 
-function getRandomUserAgent(): string {
-  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+/**
+ * 获取随机 User-Agent 及对应的浏览器指纹
+ */
+function getRandomUserAgent(): {
+  ua: string;
+  browser: 'chrome' | 'firefox' | 'safari' | 'edge';
+  platform: string;
+} {
+  const index = Math.floor(Math.random() * USER_AGENTS.length);
+  const ua = USER_AGENTS[index];
+
+  // 识别浏览器类型和平台
+  let browser: 'chrome' | 'firefox' | 'safari' | 'edge' = 'chrome';
+  let platform = 'Windows';
+
+  if (ua.includes('Firefox')) {
+    browser = 'firefox';
+  } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
+    browser = 'safari';
+  } else if (ua.includes('Edg/')) {
+    browser = 'edge';
+  }
+
+  if (ua.includes('Macintosh')) {
+    platform = 'macOS';
+  } else if (ua.includes('Linux')) {
+    platform = 'Linux';
+  }
+
+  return { ua, browser, platform };
+}
+
+/**
+ * 生成 Sec-CH-UA 客户端提示（Chrome/Edge）
+ */
+function getSecChUaHeaders(browser: 'chrome' | 'firefox' | 'safari' | 'edge', platform: string): Record<string, string> {
+  if (browser === 'chrome') {
+    return {
+      'Sec-CH-UA': '"Google Chrome";v="133", "Chromium";v="133", "Not?A_Brand";v="24"',
+      'Sec-CH-UA-Mobile': '?0',
+      'Sec-CH-UA-Platform': `"${platform}"`,
+    };
+  } else if (browser === 'edge') {
+    return {
+      'Sec-CH-UA': '"Microsoft Edge";v="133", "Chromium";v="133", "Not?A_Brand";v="24"',
+      'Sec-CH-UA-Mobile': '?0',
+      'Sec-CH-UA-Platform': `"${platform}"`,
+    };
+  }
+  // Firefox 和 Safari 不发送 Sec-CH-UA
+  return {};
 }
 
 function randomDelay(min = 1000, max = 3000): Promise<void> {
@@ -31,20 +88,65 @@ export const runtime = 'nodejs';
 
 /**
  * 从移动端API获取预告片和高清图片（内部函数）
+ * 2024-2025 最佳实践：使用最新 User-Agent 和完整请求头
+ * 支持电影和电视剧（自动检测并切换端点）
  */
 async function _fetchMobileApiData(id: string): Promise<{
   trailerUrl?: string;
   backdrop?: string;
 } | null> {
   try {
-    const mobileApiUrl = `https://m.douban.com/rexxar/api/v2/movie/${id}`;
-    const response = await fetch(mobileApiUrl, {
+    // 先尝试 movie 端点
+    let mobileApiUrl = `https://m.douban.com/rexxar/api/v2/movie/${id}`;
+
+    // 创建 AbortController 用于超时控制
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
+
+    let response = await fetch(mobileApiUrl, {
+      signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/537.36',
-        'Referer': 'https://m.douban.com/',
-        'Accept': 'application/json',
+        // 2024-2025 最新 User-Agent（桌面版更不容易被限制）
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+        'Referer': 'https://movie.douban.com/explore',  // 更具体的 Referer
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Origin': 'https://movie.douban.com',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site',
       },
+      redirect: 'manual', // 手动处理重定向
     });
+
+    clearTimeout(timeoutId);
+
+    // 如果是 3xx 重定向，说明可能是电视剧，尝试 tv 端点
+    if (response.status >= 300 && response.status < 400) {
+      console.log(`[details] 检测到重定向，尝试 TV 端点: ${id}`);
+      mobileApiUrl = `https://m.douban.com/rexxar/api/v2/tv/${id}`;
+
+      const tvController = new AbortController();
+      const tvTimeoutId = setTimeout(() => tvController.abort(), 15000);
+
+      response = await fetch(mobileApiUrl, {
+        signal: tvController.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+          'Referer': 'https://movie.douban.com/explore',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Origin': 'https://movie.douban.com',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-site',
+        },
+      });
+
+      clearTimeout(tvTimeoutId);
+    }
 
     if (!response.ok) {
       console.warn(`移动端API请求失败: ${response.status}`);
@@ -75,21 +177,26 @@ async function _fetchMobileApiData(id: string): Promise<{
 
     return { trailerUrl, backdrop };
   } catch (error) {
-    console.warn(`获取移动端API数据失败: ${(error as Error).message}`);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn(`获取移动端API数据超时`);
+    } else {
+      console.warn(`获取移动端API数据失败: ${(error as Error).message}`);
+    }
     return null;
   }
 }
 
 /**
  * 使用 unstable_cache 包裹移动端API请求
- * - 7天缓存（预告片和高清图片很少变化）
+ * - 30分钟缓存（trailer URL 有时效性，需要较短缓存）
  * - 与详情页缓存分开管理
+ * - Next.js会自动根据函数参数区分缓存
  */
 const fetchMobileApiData = unstable_cache(
-  _fetchMobileApiData,
+  async (id: string) => _fetchMobileApiData(id),
   ['douban-mobile-api'],
   {
-    revalidate: 604800, // 7天缓存
+    revalidate: 1800, // 30分钟缓存
     tags: ['douban-mobile'],
   }
 );
@@ -141,21 +248,28 @@ async function _scrapeDoubanDetails(id: string, retryCount = 0): Promise<any> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
 
+    // 获取随机浏览器指纹
+    const { ua, browser, platform } = getRandomUserAgent();
+    const secChHeaders = getSecChUaHeaders(browser, platform);
+
+    // 🎯 2025 最佳实践：按照真实浏览器的头部顺序发送
     const fetchOptions = {
       signal: controller.signal,
       headers: {
-        'User-Agent': getRandomUserAgent(),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        // 基础头部（所有浏览器通用）
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Encoding': 'gzip, deflate, br, zstd',
+        'Cache-Control': 'max-age=0',
         'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
+        ...secChHeaders,  // Chrome/Edge 的 Sec-CH-UA 头部
         'Sec-Fetch-Dest': 'document',
         'Sec-Fetch-Mode': 'navigate',
         'Sec-Fetch-Site': 'none',
-        'Cache-Control': 'max-age=0',
-        // 随机添加Referer
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': ua,
+        // 随机添加 Referer（50% 概率）
         ...(Math.random() > 0.5 ? { 'Referer': 'https://www.douban.com/' } : {}),
       },
     };
@@ -221,9 +335,10 @@ async function _scrapeDoubanDetails(id: string, retryCount = 0): Promise<any> {
  * 使用 unstable_cache 包裹爬虫函数
  * - 4小时缓存
  * - 自动重新验证
+ * - Next.js会自动根据函数参数区分缓存
  */
 export const scrapeDoubanDetails = unstable_cache(
-  _scrapeDoubanDetails,
+  async (id: string, retryCount = 0) => _scrapeDoubanDetails(id, retryCount),
   ['douban-details'],
   {
     revalidate: 14400, // 4小时缓存
@@ -267,15 +382,18 @@ export async function GET(request: Request) {
     const cacheTime = await getCacheTime();
 
     // 🔍 调试模式：绕过缓存
+    // 🎬 Trailer安全缓存：30分钟（与移动端API的unstable_cache保持一致）
+    // 因为trailer URL有效期约2-3小时，30分钟缓存确保用户拿到的链接仍然有效
+    const trailerSafeCacheTime = 1800; // 30分钟
     const cacheHeaders = noCache ? {
       'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma': 'no-cache',
       'Expires': '0',
       'X-Data-Source': 'no-cache-debug',
     } : {
-      'Cache-Control': `public, max-age=${cacheTime}, s-maxage=86400, stale-while-revalidate=43200`,
-      'CDN-Cache-Control': `public, s-maxage=86400`,
-      'Vercel-CDN-Cache-Control': `public, s-maxage=86400`,
+      'Cache-Control': `public, max-age=${trailerSafeCacheTime}, s-maxage=${trailerSafeCacheTime}, stale-while-revalidate=${trailerSafeCacheTime}`,
+      'CDN-Cache-Control': `public, s-maxage=${trailerSafeCacheTime}`,
+      'Vercel-CDN-Cache-Control': `public, s-maxage=${trailerSafeCacheTime}`,
       'Netlify-Vary': 'query',
       'X-Data-Source': 'scraper-cached',
     };
