@@ -75,11 +75,6 @@
       "api": "https://jyzyapi.com/provide/vod/from/jinyingyun/at/json",
       "detail": "https://jinyingzy.net"
     },
-    "p2100": {
-      "name": "🎬飘零资源",
-      "api": "https://p2100.net/api.php/provide/vod",
-      "detail": "https://p2100.net"
-    },
     "guangsuapi": {
       "api": "https://api.guangsuapi.com/api.php/provide/vod",
       "name": "🎬光速资源",
@@ -107,11 +102,6 @@
       "name": "🎬闪电资源",
       "api": "https://xsd.sdzyapi.com/api.php/provide/vod",
       "detail": "https://shandianzy.com"
-    },
-    "shzy": {
-      "name": "🎬山海资源",
-      "api": "https://zy.sh0o.cn/api.php/provide/vod",
-      "detail": "https://zy.sh0o.cn"
     },
     "zy360": {
       "name": "🎬360资源",
@@ -196,21 +186,10 @@
       "api": "https://jyzyapi.com/provide/vod/from/jinyingyun/at/json",
       "detail": "https://jinyingzy.net"
     },
-    "p2100.net": {
-      "name": "🎬飘零资源",
-      "api": "https://p2100.net/api.php/provide/vod",
-      "detail": "https://p2100.net"
-    },
     "api.guangsuapi.com": {
       "name": "🎬光速资源",
       "api": "https://api.guangsuapi.com/api.php/provide/vod",
       "detail": "https://api.guangsuapi.com"
-    },
-    "zy.sh0o.cn": {
-      "_comment": "无搜索结果",
-      "name": "🎬山海资源",
-      "api": "https://zy.sh0o.cn/api.php/provide/vod",
-      "detail": "https://zy.sh0o.cn"
     },
     "yhzy.cc": {
       "_comment": " 403 Forbidden ",
@@ -324,11 +303,6 @@
       "name": "🎬豆瓣资源",
       "api": "https://caiji.dbzy5.com/api.php/provide/vod",
       "detail": "https://dbzy.tv"
-    },
-    "www.maoyanzy.com": {
-      "name": "🎬猫眼资源",
-      "api": "https://api.maoyanapi.top/api.php/provide/vod",
-      "detail": "https://www.maoyanzy.com"
     }
   }
 }
