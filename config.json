@@ -89,15 +89,6 @@
       "name": "1080资源",
       "detail": "https://api.1080zyku.com"
     },
-    "tyyszy": {
-      "api": "https://tyyszy.com/api.php/provide/vod",
-      "name": "天涯资源"
-    },
-    "tyyszyapi": {
-      "name": "🎬天涯影视",
-      "api": "https://tyyszy.com/api.php/provide/vod",
-      "detail": "https://tyyszy.com"
-    },
     "shandian": {
       "name": "🎬闪电资源",
       "api": "https://xsd.sdzyapi.com/api.php/provide/vod",
@@ -112,11 +103,6 @@
       "name": "🎬-爱奇艺-",
       "api": "https://iqiyizyapi.com/api.php/provide/vod",
       "detail": "https://iqiyizyapi.com"
-    },
-    "tyyszy.com": {
-      "name": "🎬天涯影视",
-      "api": "https://tyyszy.com/api.php/provide/vod",
-      "detail": "https://tyyszy.com"
     },
     "ikunzy.com": {
       "name": "🎬iKun资源",
@@ -313,6 +299,12 @@
       "name": "🎬山海资源",
       "api": "https://zy.sh0o.cn/api.php/provide/vod",
       "detail": "https://zy.sh0o.cn"
+    },
+    "zy.jinchancaiji.com": {
+      "_comment": "无搜索结果",
+      "name": "🎬金蝉影视",
+      "api": "https://zy.jinchancaiji.com/api.php/provide/vod",
+      "detail": "https://zy.jinchancaiji.com"
     }
   }
 }
