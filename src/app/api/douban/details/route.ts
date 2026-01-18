@@ -32,6 +32,10 @@ async function _fetchMobileApiData(id: string): Promise<{
     // 先尝试 movie 端点
     let mobileApiUrl = `https://m.douban.com/rexxar/api/v2/movie/${id}`;
 
+    // 获取随机浏览器指纹
+    const { ua, browser, platform } = getRandomUserAgentWithInfo();
+    const secChHeaders = getSecChUaHeaders(browser, platform);
+
     // 创建 AbortController 用于超时控制
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
@@ -39,13 +43,13 @@ async function _fetchMobileApiData(id: string): Promise<{
     let response = await fetch(mobileApiUrl, {
       signal: controller.signal,
       headers: {
-        // 2024-2025 最新 User-Agent（桌面版更不容易被限制）
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+        'User-Agent': ua,
         'Referer': 'https://movie.douban.com/explore',  // 更具体的 Referer
         'Accept': 'application/json, text/plain, */*',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
         'Accept-Encoding': 'gzip, deflate, br',
         'Origin': 'https://movie.douban.com',
+        ...secChHeaders,  // Chrome/Edge 的 Sec-CH-UA 头部
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'same-site',
@@ -66,12 +70,13 @@ async function _fetchMobileApiData(id: string): Promise<{
       response = await fetch(mobileApiUrl, {
         signal: tvController.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+          'User-Agent': ua,
           'Referer': 'https://movie.douban.com/explore',
           'Accept': 'application/json, text/plain, */*',
           'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
           'Accept-Encoding': 'gzip, deflate, br',
           'Origin': 'https://movie.douban.com',
+          ...secChHeaders,  // Chrome/Edge 的 Sec-CH-UA 头部
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
@@ -651,6 +656,26 @@ function parseDoubanDetails(html: string, id: string) {
       }
     }
 
+    // 🎯 智能判断影片类型（电影 vs 剧集）- 多重判断确保准确性
+    let contentType: 'movie' | 'tv' = 'movie'; // 默认为电影
+
+    // 方法1: 检查是否有"首播"字段（只有剧集有首播，电影是"上映"）
+    const hasFirstAired = html.includes('<span class="pl">首播:</span>');
+
+    // 方法2: 检查是否有集数信息（只有剧集有集数）
+    const hasEpisodes = episodes && episodes > 0;
+
+    // 方法3: 检查是否有"单集片长"（只有剧集有单集片长，电影是"片长"）
+    const hasEpisodeLength = episode_length !== undefined;
+
+    // 综合判断：满足任一条件即为剧集
+    if (hasFirstAired || hasEpisodes || hasEpisodeLength) {
+      contentType = 'tv';
+      console.log(`[Douban] 识别为剧集: ${title} (首播:${hasFirstAired}, 集数:${hasEpisodes}, 单集片长:${hasEpisodeLength})`);
+    } else {
+      console.log(`[Douban] 识别为电影: ${title}`);
+    }
+
     return {
       code: 200,
       message: '获取成功',
@@ -679,6 +704,8 @@ function parseDoubanDetails(html: string, id: string) {
         backdrop: scenePhoto,
         // 🎬 预告片URL（由移动端API填充）
         trailerUrl: undefined,
+        // 🆕 影片类型（电影/剧集）- AI识别关键字段
+        type: contentType,
       }
     };
   } catch (error) {
