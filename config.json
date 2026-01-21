@@ -289,12 +289,6 @@
       "api": "https://p2100.net/api.php/provide/vod",
       "detail": "https://p2100.net"
     },
-    "zy.sh0o.cn": {
-      "_comment": "无搜索结果",
-      "name": "🎬山海资源",
-      "api": "https://zy.sh0o.cn/api.php/provide/vod",
-      "detail": "https://zy.sh0o.cn"
-    },
     "zy.jinchancaiji.com": {
       "_comment": "无搜索结果",
       "name": "🎬金蝉影视",
