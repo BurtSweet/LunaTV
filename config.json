@@ -299,6 +299,11 @@
       "name": "🎬优质资源",
       "api": "https://api.yzzy-api.com/inc/apijson.php",
       "detail": "https://1080zyk4.com"
+    },
+    "lovedan.net": {
+      "name": "🎬艾旦影视",
+      "api": "https://pz.168188.dpdns.org/?url=https://lovedan.net/api.php/provide/vod",
+      "detail": "https://lovedan.net"
     }
   }
 }
