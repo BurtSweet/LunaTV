@@ -8,6 +8,7 @@ import {
   Calendar,
   Check,
   ChevronDown,
+  Download,
   ExternalLink,
   Heart,
   KeyRound,
@@ -41,6 +42,8 @@ import {
 } from '@/lib/db.client';
 import type { Favorite } from '@/lib/types';
 
+import { useDownload } from '@/contexts/DownloadContext';
+
 import { VersionPanel } from './VersionPanel';
 import VideoCard from './VideoCard';
 
@@ -72,6 +75,8 @@ export const UserMenu: React.FC = () => {
   const [favorites, setFavorites] = useState<(Favorite & { key: string })[]>([]);
   const [hasUnreadUpdates, setHasUnreadUpdates] = useState(false);
   const [showWatchRoom, setShowWatchRoom] = useState(false);
+  const [downloadEnabled, setDownloadEnabled] = useState(true);
+  const { tasks, setShowDownloadPanel } = useDownload();
 
   // Body 滚动锁定 - 使用 overflow 方式避免布局问题
   useEffect(() => {
@@ -123,6 +128,8 @@ export const UserMenu: React.FC = () => {
 
   // 下载相关设置
   const [downloadFormat, setDownloadFormat] = useState<'TS' | 'MP4'>('TS');
+  // 精确搜索开关
+  const [exactSearch, setExactSearch] = useState(true);
 
   // 豆瓣数据源选项
   const doubanDataSourceOptions = [
@@ -234,6 +241,22 @@ export const UserMenu: React.FC = () => {
     };
 
     checkWatchRoomConfig();
+  }, []);
+
+  // 检查下载功能是否启用
+  useEffect(() => {
+    const fetchDownloadConfig = async () => {
+      try {
+        const response = await fetch('/api/server-config');
+        if (response.ok) {
+          const config = await response.json();
+          setDownloadEnabled(config.DownloadEnabled ?? true);
+        }
+      } catch {
+        setDownloadEnabled(true);
+      }
+    };
+    fetchDownloadConfig();
   }, []);
 
   // 从 localStorage 读取设置
@@ -353,6 +376,12 @@ export const UserMenu: React.FC = () => {
       if (savedDownloadFormat === 'TS' || savedDownloadFormat === 'MP4') {
         setDownloadFormat(savedDownloadFormat);
       }
+
+      // 加载精确搜索设置
+      const savedExactSearch = localStorage.getItem('exactSearch');
+      if (savedExactSearch !== null) {
+        setExactSearch(savedExactSearch === 'true');
+      }
     }
   }, []);
 
@@ -402,13 +431,13 @@ export const UserMenu: React.FC = () => {
         }
       };
 
-      // 页面初始化时强制检查一次更新（绕过缓存限制）
+      // 页面初始化时检查更新（使用缓存机制）
       const forceInitialCheck = async () => {
-        console.log('页面初始化，强制检查更新...');
+        console.log('页面初始化，检查更新...');
         try {
-          // 🔧 修复：直接使用 forceRefresh=true，不再手动操作 localStorage
-          // 因为 kvrocks 模式使用内存缓存，删除 localStorage 无效
-          await checkWatchingUpdates(true);
+          // 🔧 修复：不使用强制刷新，让缓存机制生效（30分钟）
+          // 如果缓存有效，直接使用缓存；如果过期，自动重新检查
+          await checkWatchingUpdates();
 
           // 更新UI
           updateWatchingUpdates();
@@ -928,6 +957,13 @@ export const UserMenu: React.FC = () => {
     }
   };
 
+  const handleExactSearchToggle = (value: boolean) => {
+    setExactSearch(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('exactSearch', String(value));
+    }
+  };
+
   // 获取感谢信息
   const getThanksInfo = (dataSource: string) => {
     switch (dataSource) {
@@ -1187,6 +1223,34 @@ export const UserMenu: React.FC = () => {
             >
               <Users className='w-4 h-4 text-gray-500 dark:text-gray-400' />
               <span className='font-medium'>观影室</span>
+            </button>
+          )}
+
+          {/* 下载管理按钮 */}
+          {downloadEnabled && (
+            <button
+              onClick={() => {
+                setShowDownloadPanel(true);
+                handleCloseMenu();
+              }}
+              className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-[background-color] duration-150 ease-in-out text-sm'
+            >
+              <Download className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+              <span className='font-medium'>下载管理</span>
+              {tasks.filter(t => t.status === 'downloading').length > 0 && (
+                <span className='ml-auto flex items-center gap-1'>
+                  <span className='relative flex h-2 w-2'>
+                    <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75'></span>
+                    <span className='relative inline-flex rounded-full h-2 w-2 bg-green-500'></span>
+                  </span>
+                  <span className='text-xs text-green-600 dark:text-green-400'>
+                    {tasks.filter(t => t.status === 'downloading').length}
+                  </span>
+                </span>
+              )}
+              {tasks.length > 0 && tasks.filter(t => t.status === 'downloading').length === 0 && (
+                <span className='ml-auto text-xs text-gray-400'>{tasks.length}</span>
+              )}
             </button>
           )}
 
@@ -1579,6 +1643,30 @@ export const UserMenu: React.FC = () => {
                     className='sr-only peer'
                     checked={fluidSearch}
                     onChange={(e) => handleFluidSearchToggle(e.target.checked)}
+                  />
+                  <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
+                  <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
+                </div>
+              </label>
+            </div>
+
+            {/* 精确搜索 */}
+            <div className='flex items-center justify-between'>
+              <div>
+                <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                  精确搜索
+                </h4>
+                <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                  开启后，搜索结果将过滤掉不包含搜索词的内容
+                </p>
+              </div>
+              <label className='flex items-center cursor-pointer'>
+                <div className='relative'>
+                  <input
+                    type='checkbox'
+                    className='sr-only peer'
+                    checked={exactSearch}
+                    onChange={(e) => handleExactSearchToggle(e.target.checked)}
                   />
                   <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                   <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
