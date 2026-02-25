@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Cat, Clover, Film, Globe, Home, MoreHorizontal, PlaySquare, Radio, Search, Sparkles, Star, Tv, X } from 'lucide-react';
+import { Cat, Clover, Film, FolderOpen, Globe, Home, MoreHorizontal, PlaySquare, Radio, Search, Sparkles, Star, Tv, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -100,17 +100,31 @@ export default function ModernNav({ showAIButton = false, onAIButtonClick }: Mod
 
   useEffect(() => {
     const runtimeConfig = (window as any).RUNTIME_CONFIG;
+    const newItems = [...menuItems];
+
     if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
-      setMenuItems((prevItems) => [
-        ...prevItems,
-        {
-          icon: Star,
-          label: '自定义',
-          href: '/douban?type=custom',
-          color: 'text-yellow-500',
-          gradient: 'from-yellow-500 to-amber-500',
-        },
-      ]);
+      newItems.push({
+        icon: Star,
+        label: '自定义',
+        href: '/douban?type=custom',
+        color: 'text-yellow-500',
+        gradient: 'from-yellow-500 to-amber-500',
+      });
+    }
+
+    // Emby
+    if (runtimeConfig?.PRIVATE_LIBRARY_ENABLED) {
+      newItems.push({
+        icon: FolderOpen,
+        label: 'Emby',
+        href: '/private-library',
+        color: 'text-indigo-500',
+        gradient: 'from-indigo-500 to-purple-500',
+      });
+    }
+
+    if (newItems.length > menuItems.length) {
+      setMenuItems(newItems);
     }
   }, []);
 
