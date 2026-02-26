@@ -5,6 +5,7 @@
 import { Cat, Clover, Film, FolderOpen, Globe, Home, MoreHorizontal, PlaySquare, Radio, Search, Sparkles, Star, Tv, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { FastLink } from './FastLink';
 import { ThemeToggle } from './ThemeToggle';
@@ -98,6 +99,19 @@ export default function ModernNav({ showAIButton = false, onAIButtonClick }: Mod
     },
   ]);
 
+  // 检查用户是否配置了 Emby
+  const { data: userEmbyConfig } = useQuery({
+    queryKey: ['user', 'emby-config'],
+    queryFn: async () => {
+      const res = await fetch('/api/user/emby-config');
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.config;
+    },
+    staleTime: 5 * 60 * 1000, // 5分钟
+    retry: false,
+  });
+
   useEffect(() => {
     const runtimeConfig = (window as any).RUNTIME_CONFIG;
     const newItems = [...menuItems];
@@ -112,8 +126,11 @@ export default function ModernNav({ showAIButton = false, onAIButtonClick }: Mod
       });
     }
 
-    // Emby
-    if (runtimeConfig?.PRIVATE_LIBRARY_ENABLED) {
+    // Emby - 检查用户是否配置了 Emby
+    const hasEmbyConfig = userEmbyConfig?.sources?.some((s: any) => s.enabled && s.ServerURL);
+    const hasEmbyInMenu = newItems.some(item => item.href === '/private-library');
+
+    if (hasEmbyConfig && !hasEmbyInMenu) {
       newItems.push({
         icon: FolderOpen,
         label: 'Emby',
@@ -121,12 +138,18 @@ export default function ModernNav({ showAIButton = false, onAIButtonClick }: Mod
         color: 'text-indigo-500',
         gradient: 'from-indigo-500 to-purple-500',
       });
+    } else if (!hasEmbyConfig && hasEmbyInMenu) {
+      // 如果用户删除了所有 Emby 配置，移除导航项
+      const index = newItems.findIndex(item => item.href === '/private-library');
+      if (index > -1) {
+        newItems.splice(index, 1);
+      }
     }
 
-    if (newItems.length > menuItems.length) {
+    if (newItems.length !== menuItems.length) {
       setMenuItems(newItems);
     }
-  }, []);
+  }, [userEmbyConfig]);
 
   useEffect(() => {
     const queryString = searchParams.toString();

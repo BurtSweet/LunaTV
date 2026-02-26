@@ -79,6 +79,13 @@ export class EmbyClient {
   constructor(config: EmbyConfig) {
     let serverUrl = config.ServerURL.replace(/\/$/, '');
 
+    // 🔍 调试日志
+    console.log('🎬 EmbyClient 初始化配置:', {
+      transcodeMp4: config.transcodeMp4,
+      proxyPlay: config.proxyPlay,
+      key: config.key,
+    });
+
     // 存储高级选项
     this.removeEmbyPrefix = config.removeEmbyPrefix || false;
     this.appendMediaSourceId = config.appendMediaSourceId || false;
@@ -105,6 +112,13 @@ export class EmbyClient {
   }
 
   private async ensureAuthenticated(): Promise<void> {
+    // 如果有 ApiKey 但没有 userId，需要获取用户 ID
+    if (this.apiKey && !this.userId) {
+      const user = await this.getCurrentUser();
+      this.userId = user.Id;
+      return;
+    }
+
     // 如果有 ApiKey，不需要认证
     if (this.apiKey) return;
 
@@ -136,18 +150,13 @@ export class EmbyClient {
   async authenticate(username: string, password: string): Promise<{ AccessToken: string; User: { Id: string } }> {
     const url = `${this.serverUrl}/Users/AuthenticateByName`;
 
-    const params = new URLSearchParams({
-      Username: username,
-      Pw: password,
-    });
-
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         'X-Emby-Authorization': 'MediaBrowser Client="LunaTV", Device="Web", DeviceId="lunatv-web", Version="1.0.0"',
       },
-      body: params.toString(),
+      body: JSON.stringify({ Username: username, Pw: password }),
     });
 
     if (!response.ok) {
@@ -162,12 +171,10 @@ export class EmbyClient {
   }
 
   async getCurrentUser(): Promise<{ Id: string; Name: string }> {
-    // 如果使用 API Key，需要通过 /Users 端点获取用户列表
+    // 如果使用 API Key，通过 /Users 端点获取用户列表（用 query param 传 api_key）
     if (this.apiKey) {
-      const url = `${this.serverUrl}/Users`;
-      const headers = this.getHeaders();
-
-      const response = await fetch(url, { headers });
+      const url = `${this.serverUrl}/Users?api_key=${this.apiKey}`;
+      const response = await fetch(url);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -179,23 +186,29 @@ export class EmbyClient {
         throw new Error('未找到任何用户');
       }
 
-      // 返回第一个用户（通常是管理员）
       return users[0];
     }
 
-    // 使用 AuthToken 时可以直接调用 /Users/Me
-    const url = `${this.serverUrl}/Users/Me`;
-    const headers = this.getHeaders();
-
-    const response = await fetch(url, { headers });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`获取当前用户信息失败 (${response.status}): ${errorText}`);
+    // 使用用户名密码时，先确保已认证
+    if (this.username && this.password && !this.authToken) {
+      const authResult = await this.authenticate(this.username, this.password);
+      this.authToken = authResult.AccessToken;
+      this.userId = authResult.User.Id;
+      return authResult.User as { Id: string; Name: string };
     }
 
-    const data = await response.json();
-    return data;
+    // 已有 authToken，用 userId 直接访问 /Users/{id}
+    if (this.authToken && this.userId) {
+      const url = `${this.serverUrl}/Users/${this.userId}?api_key=${this.authToken}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`获取当前用户信息失败 (${response.status}): ${errorText}`);
+      }
+      return await response.json();
+    }
+
+    throw new Error('未提供认证信息');
   }
 
   async getUserViews(): Promise<EmbyView[]> {
@@ -509,15 +522,18 @@ export class EmbyClient {
     let url: string;
 
     if (direct) {
-      // 选项3: 转码mp4
+      // 选项3: 转码mp4 - 使用 HLS 强制音频转码
       if (this.transcodeMp4) {
-        url = `${this.serverUrl}/Videos/${itemId}/stream.mp4?api_key=${token}`;
+        // 生成唯一的 PlaySessionId
+        const playSessionId = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        // 使用 HLS 端点并强制音频转码为 AAC，避免 EAC3/TrueHD 兼容性问题
+        url = `${this.serverUrl}/Videos/${itemId}/master.m3u8?api_key=${token}&AudioCodec=aac&AudioBitrate=320000&MaxAudioChannels=6&PlaySessionId=${playSessionId}`;
       } else {
         url = `${this.serverUrl}/Videos/${itemId}/stream?Static=true&api_key=${token}`;
       }
 
       // 选项2: 拼接MediaSourceId参数
-      if (this.appendMediaSourceId) {
+      if (this.appendMediaSourceId && !this.transcodeMp4) {
         try {
           const playbackInfo = await this.getPlaybackInfo(itemId);
           if (playbackInfo.MediaSourceId) {
