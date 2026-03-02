@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
+import VirtualGrid from '@/components/VirtualGrid';
 
 interface EmbySourceOption {
   key: string;
@@ -88,6 +89,15 @@ export default function PrivateLibraryPage() {
   const [mounted, setMounted] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  // 虚拟化开关状态
+  const [useVirtualization, setUseVirtualization] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('useEmbyVirtualization');
+      return saved !== null ? JSON.parse(saved) : true; // 默认启用
+    }
+    return true;
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -196,8 +206,10 @@ export default function PrivateLibraryPage() {
     [listData]
   );
 
-  // 无限滚动：监听底部元素进入视口
+  // 无限滚动：监听底部元素进入视口（仅用于非虚拟化模式）
   useEffect(() => {
+    // 虚拟化模式使用 endReached 回调，不需要 IntersectionObserver
+    if (useVirtualization) return;
     if (!hasNextPage || isFetchingNextPage) return;
 
     const observer = new IntersectionObserver(
@@ -214,14 +226,15 @@ export default function PrivateLibraryPage() {
     return () => {
       if (target) observer.unobserve(target);
     };
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, useVirtualization]);
 
   // ── 4. Emby 搜索 ──────────────────────────────────────────────────────────
   const { data: searchData, isFetching: isSearching } = useQuery({
-    queryKey: ['emby', 'search', embyKey, searchKeyword],
+    queryKey: ['emby', 'search', embyKey, selectedView, searchKeyword],
     queryFn: async ({ signal }) => {
       const params = new URLSearchParams({ keyword: searchKeyword });
       if (embyKey) params.append('embyKey', embyKey);
+      if (selectedView && selectedView !== 'all') params.append('parentId', selectedView);
       const res = await fetch(`/api/emby/search?${params.toString()}`, { signal });
       if (!res.ok) throw new Error('搜索失败');
       const data = await res.json();
@@ -255,6 +268,14 @@ export default function PrivateLibraryPage() {
       localStorage.setItem('emby_sortOrder', next);
       return next;
     });
+  };
+
+  const toggleVirtualization = () => {
+    const newValue = !useVirtualization;
+    setUseVirtualization(newValue);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('useEmbyVirtualization', JSON.stringify(newValue));
+    }
   };
 
   const errorMessage = isError ? (listError as Error)?.message || '获取列表失败，请稍后重试' : '';
@@ -428,6 +449,28 @@ export default function PrivateLibraryPage() {
                   )}
                 </span>
               </button>
+
+              {/* 虚拟化开关 */}
+              <label className='flex items-center gap-2 cursor-pointer select-none group'>
+                <span className='text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'>
+                  ⚡ 虚拟滑动
+                </span>
+                <div className='relative'>
+                  <input
+                    type='checkbox'
+                    className='sr-only peer'
+                    checked={useVirtualization}
+                    onChange={toggleVirtualization}
+                  />
+                  <div className='w-11 h-6 bg-linear-to-r from-gray-200 to-gray-300 rounded-full peer-checked:from-blue-400 peer-checked:to-purple-500 transition-all duration-300 dark:from-gray-600 dark:to-gray-700 dark:peer-checked:from-blue-500 dark:peer-checked:to-purple-600 shadow-inner'></div>
+                  <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-all duration-300 peer-checked:translate-x-5 shadow-lg peer-checked:shadow-blue-300 dark:peer-checked:shadow-blue-500/50 peer-checked:scale-105'></div>
+                  <div className='absolute top-1.5 left-1.5 w-3 h-3 flex items-center justify-center pointer-events-none transition-all duration-300 peer-checked:translate-x-5'>
+                    <span className='text-[10px] peer-checked:text-white text-gray-500'>
+                      {useVirtualization ? '✨' : '○'}
+                    </span>
+                  </div>
+                </div>
+              </label>
             </div>
           </div>
         </div>
@@ -480,6 +523,42 @@ export default function PrivateLibraryPage() {
           </div>
         )}
 
+        {/* 无搜索结果 */}
+        {isSearchMode && !isSearching && searchResults.length === 0 && (
+          <div className='flex justify-center py-16'>
+            <div className='relative px-12 py-10 rounded-3xl bg-linear-to-br from-gray-50 via-slate-50 to-gray-100 dark:from-gray-800/40 dark:via-slate-800/40 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 shadow-xl backdrop-blur-sm overflow-hidden max-w-md'>
+              <div className='absolute top-0 left-0 w-32 h-32 bg-linear-to-br from-green-200/20 to-teal-200/20 rounded-full blur-3xl'></div>
+              <div className='absolute bottom-0 right-0 w-32 h-32 bg-linear-to-br from-blue-200/20 to-green-200/20 rounded-full blur-3xl'></div>
+              <div className='relative flex flex-col items-center gap-4'>
+                <div className='relative'>
+                  <div className='w-24 h-24 rounded-full bg-linear-to-br from-gray-100 to-slate-200 dark:from-gray-700 dark:to-slate-700 flex items-center justify-center shadow-lg'>
+                    <svg className='w-12 h-12 text-gray-400 dark:text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='1.5' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'></path>
+                    </svg>
+                  </div>
+                  <div className='absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping'></div>
+                  <div className='absolute -bottom-1 -left-1 w-2 h-2 bg-teal-400 rounded-full animate-pulse'></div>
+                </div>
+                <div className='text-center space-y-2'>
+                  <h3 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+                    没有找到相关视频
+                  </h3>
+                  <p className='text-sm text-gray-600 dark:text-gray-400 max-w-xs'>
+                    换个关键词试试，或者浏览 Emby 媒体库
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSearchKeyword('')}
+                  className='mt-2 px-6 py-2.5 bg-linear-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105'
+                >
+                  清除搜索条件
+                </button>
+                <div className='w-16 h-1 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600 rounded-full'></div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 视频列表 */}
         {!loading && videos.length > 0 && !isSearchMode && (
           <>
@@ -488,20 +567,48 @@ export default function PrivateLibraryPage() {
                 已加载 {videos.length} / {listData?.pages[0]?.total ?? 0} 部
               </p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {videos.map((video) => (
-                <VideoCard
-                  key={video.id}
-                  id={video.id}
-                  title={video.title}
-                  poster={video.poster}
-                  year={video.year}
-                  source={embyKey ? `emby_${embyKey}` : 'emby'}
-                  source_name={embySourceName}
-                  from="search"
-                />
-              ))}
-            </div>
+
+            {useVirtualization ? (
+              <VirtualGrid
+                items={videos}
+                className='grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+                rowGapClass='pb-4'
+                estimateRowHeight={280}
+                endReached={() => {
+                  if (hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                  }
+                }}
+                endReachedThreshold={3}
+                renderItem={(video) => (
+                  <VideoCard
+                    key={video.id}
+                    id={video.id}
+                    title={video.title}
+                    poster={video.poster}
+                    year={video.year}
+                    source={embyKey ? `emby_${embyKey}` : 'emby'}
+                    source_name={embySourceName}
+                    from="search"
+                  />
+                )}
+              />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {videos.map((video) => (
+                  <VideoCard
+                    key={video.id}
+                    id={video.id}
+                    title={video.title}
+                    poster={video.poster}
+                    year={video.year}
+                    source={embyKey ? `emby_${embyKey}` : 'emby'}
+                    source_name={embySourceName}
+                    from="search"
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
 
@@ -522,8 +629,8 @@ export default function PrivateLibraryPage() {
           </div>
         )}
 
-        {/* 无限滚动触发器 */}
-        <div ref={observerTarget} className="h-4" />
+        {/* 无限滚动触发器（仅用于非虚拟化模式） */}
+        {!useVirtualization && <div ref={observerTarget} className="h-4" />}
       </div>
     </PageLayout>
   );
