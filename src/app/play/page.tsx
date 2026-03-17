@@ -4,11 +4,12 @@
 
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Hls from 'hls.js';
 import { Heart, ChevronUp, Download, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { useDownload } from '@/contexts/DownloadContext';
 import { useDanmu } from '@/hooks/useDanmu';
@@ -117,6 +118,8 @@ function PlayPageClient() {
 
   // 收藏状态
   const [favorited, setFavorited] = useState(false);
+  // 追踪当前收藏实际存储的 key（source+id），用于切换源后正确删除
+  const favoritedKeyRef = useRef<string | null>(null);
 
   // 返回顶部按钮显示状态
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -3400,6 +3403,38 @@ function PlayPageClient() {
   // ---------------------------------------------------------------------------
   // 收藏相关
   // ---------------------------------------------------------------------------
+
+  // 在收藏列表中查找匹配的收藏（按 key 精确匹配 + 按 title 模糊匹配）
+  const findMatchedFavoriteKey = useCallback((
+    favorites: Record<string, any>,
+  ): string | null => {
+    // 1. 精确匹配：当前源 key
+    const currentKey = currentSource && currentId ? `${currentSource}+${currentId}` : null;
+    if (currentKey && favorites[currentKey]) return currentKey;
+
+    // 2. 精确匹配：豆瓣/Bangumi/短剧虚拟源
+    if (videoDoubanId) {
+      const doubanKey = `douban+${videoDoubanId}`;
+      if (favorites[doubanKey]) return doubanKey;
+      const bangumiKey = `bangumi+${videoDoubanId}`;
+      if (favorites[bangumiKey]) return bangumiKey;
+    }
+    if (shortdramaId) {
+      const sdKey = `shortdrama+${shortdramaId}`;
+      if (favorites[sdKey]) return sdKey;
+    }
+
+    // 3. 按 title 匹配：同一部片在不同源有不同 source+id，用标题兜底
+    const title = videoTitleRef.current;
+    if (title) {
+      for (const [key, fav] of Object.entries(favorites)) {
+        if ((fav as any)?.title === title) return key;
+      }
+    }
+
+    return null;
+  }, [currentSource, currentId, videoDoubanId, shortdramaId]);
+
   // 每当 source 或 id 变化时检查收藏状态（支持豆瓣/Bangumi等虚拟源）
   useEffect(() => {
     if (!currentSource || !currentId) return;
@@ -3407,22 +3442,14 @@ function PlayPageClient() {
       try {
         const favorites = await getAllFavorites();
 
-        // 检查多个可能的收藏key
-        const possibleKeys = [
-          `${currentSource}+${currentId}`, // 当前真实播放源
-          videoDoubanId ? `douban+${videoDoubanId}` : null, // 豆瓣收藏
-          videoDoubanId ? `bangumi+${videoDoubanId}` : null, // Bangumi收藏
-          shortdramaId ? `shortdrama+${shortdramaId}` : null, // 短剧收藏
-        ].filter(Boolean);
-
-        // 检查是否任一key已被收藏
-        const fav = possibleKeys.some(key => !!favorites[key as string]);
-        setFavorited(fav);
+        const matchedKey = findMatchedFavoriteKey(favorites);
+        favoritedKeyRef.current = matchedKey;
+        setFavorited(!!matchedKey);
       } catch (err) {
         console.error('检查收藏状态失败:', err);
       }
     })();
-  }, [currentSource, currentId, videoDoubanId, shortdramaId]);
+  }, [currentSource, currentId, videoDoubanId, shortdramaId, findMatchedFavoriteKey]);
 
   // 监听收藏数据更新事件（支持豆瓣/Bangumi等虚拟源）
   useEffect(() => {
@@ -3431,22 +3458,14 @@ function PlayPageClient() {
     const unsubscribe = subscribeToDataUpdates(
       'favoritesUpdated',
       (favorites: Record<string, any>) => {
-        // 检查多个可能的收藏key
-        const possibleKeys = [
-          generateStorageKey(currentSource, currentId), // 当前真实播放源
-          videoDoubanId ? `douban+${videoDoubanId}` : null, // 豆瓣收藏
-          videoDoubanId ? `bangumi+${videoDoubanId}` : null, // Bangumi收藏
-          shortdramaId ? `shortdrama+${shortdramaId}` : null, // 短剧收藏
-        ].filter(Boolean);
-
-        // 检查是否任一key已被收藏
-        const isFav = possibleKeys.some(key => !!favorites[key as string]);
-        setFavorited(isFav);
+        const matchedKey = findMatchedFavoriteKey(favorites);
+        favoritedKeyRef.current = matchedKey;
+        setFavorited(!!matchedKey);
       }
     );
 
     return unsubscribe;
-  }, [currentSource, currentId, videoDoubanId, shortdramaId]);
+  }, [currentSource, currentId, videoDoubanId, shortdramaId, findMatchedFavoriteKey]);
 
   // 自动更新收藏的集数和片源信息（支持豆瓣/Bangumi/短剧等虚拟源）
   useEffect(() => {
@@ -3457,26 +3476,9 @@ function PlayPageClient() {
         const realEpisodes = detail.episodes.length || 1;
         const favorites = await getAllFavorites();
 
-        // 检查多个可能的收藏key
-        const possibleKeys = [
-          `${currentSource}+${currentId}`, // 当前真实播放源
-          videoDoubanId ? `douban+${videoDoubanId}` : null, // 豆瓣收藏
-          videoDoubanId ? `bangumi+${videoDoubanId}` : null, // Bangumi收藏
-        ].filter(Boolean);
-
-        let favoriteToUpdate = null;
-        let favoriteKey = '';
-
-        // 找到已存在的收藏
-        for (const key of possibleKeys) {
-          if (favorites[key as string]) {
-            favoriteToUpdate = favorites[key as string];
-            favoriteKey = key as string;
-            break;
-          }
-        }
-
-        if (!favoriteToUpdate) return;
+        const favoriteKey = findMatchedFavoriteKey(favorites);
+        if (!favoriteKey) return;
+        const favoriteToUpdate = favorites[favoriteKey];
 
         // 检查是否需要更新（集数不同或缺少片源信息）
         const needsUpdate =
@@ -3556,14 +3558,18 @@ function PlayPageClient() {
       return;
 
     if (favorited) {
-      // 如果已收藏，删除收藏
+      // 如果已收藏，使用实际存储的key来删除（可能和当前源不同）
+      const keyToDelete = favoritedKeyRef.current || `${currentSourceRef.current}+${currentIdRef.current}`;
+      const [delSource, delId] = keyToDelete.split('+');
+
       deleteFavoriteMutation.mutate(
         {
-          source: currentSourceRef.current,
-          id: currentIdRef.current,
+          source: delSource,
+          id: delId,
         },
         {
           onSuccess: () => {
+            favoritedKeyRef.current = null;
             setFavorited(false);
           },
           onError: (err) => {
@@ -3592,6 +3598,8 @@ function PlayPageClient() {
         contentType = 'shortdrama';
       }
 
+      const newKey = `${currentSourceRef.current}+${currentIdRef.current}`;
+
       // 如果未收藏，添加收藏
       saveFavoriteMutation.mutate(
         {
@@ -3610,6 +3618,7 @@ function PlayPageClient() {
         },
         {
           onSuccess: () => {
+            favoritedKeyRef.current = newKey;
             setFavorited(true);
           },
           onError: (err) => {
@@ -4035,6 +4044,54 @@ function PlayPageClient() {
               return '打开弹幕设置面板';
             },
           },
+          {
+            width: 200,
+            html: '显示模式',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
+            tooltip: (() => {
+              const mode = localStorage.getItem('video_object_fit') || 'contain';
+              const modeNames: Record<string, string> = {
+                'contain': '默认(完整显示)',
+                'cover': '填充(裁切)',
+                'fill': '拉伸(变形)'
+              };
+              return modeNames[mode] || '默认(完整显示)';
+            })(),
+            selector: [
+              {
+                html: '默认(完整显示)',
+                value: 'contain',
+                default: (localStorage.getItem('video_object_fit') || 'contain') === 'contain',
+              },
+              {
+                html: '填充(裁切)',
+                value: 'cover',
+                default: localStorage.getItem('video_object_fit') === 'cover',
+              },
+              {
+                html: '拉伸(变形)',
+                value: 'fill',
+                default: localStorage.getItem('video_object_fit') === 'fill',
+              },
+            ],
+            onSelect: function (item: any) {
+              const mode = item.value;
+              localStorage.setItem('video_object_fit', mode);
+
+              // 应用到当前视频元素
+              if (artPlayerRef.current?.video) {
+                artPlayerRef.current.video.style.objectFit = mode;
+              }
+
+              const modeNames: Record<string, string> = {
+                'contain': '默认(完整显示)',
+                'cover': '填充(裁切)',
+                'fill': '拉伸(变形)'
+              };
+
+              return modeNames[mode] || item.html;
+            },
+          },
           ...(webGPUSupported ? [
             {
               name: '超分设置',
@@ -4294,6 +4351,12 @@ function PlayPageClient() {
 
         // 使用ArtPlayer layers API添加分辨率徽章（带渐变和发光效果）
         const video = artPlayerRef.current.video as HTMLVideoElement;
+
+        // 🖥️ 应用保存的显示模式设置（支持超宽屏）
+        const savedObjectFit = localStorage.getItem('video_object_fit') || 'contain';
+        if (video) {
+          video.style.objectFit = savedObjectFit;
+        }
 
         // 添加分辨率徽章layer
         artPlayerRef.current.layers.add({
@@ -5965,11 +6028,11 @@ function PlayPageClient() {
           // 单集视频，直接下载当前
           const currentUrl = videoUrl;
           if (!currentUrl) {
-            alert('无法获取视频地址');
+            toast.error('无法获取视频地址');
             return;
           }
           if (!currentUrl.includes('.m3u8')) {
-            alert('仅支持M3U8格式视频下载');
+            toast.error('仅支持M3U8格式视频下载');
             return;
           }
           try {
@@ -5982,18 +6045,72 @@ function PlayPageClient() {
               referer,
               origin,
             });
+
+            // 显示 Toast 通知
+            toast.success('下载已开始', {
+              description: videoTitle || '视频',
+              action: {
+                label: '查看下载',
+                onClick: () => setShowDownloadPanel(true)
+              },
+              duration: 5000,
+            });
           } catch (error) {
             console.error('创建下载任务失败:', error);
-            alert('创建下载任务失败: ' + (error as Error).message);
+            toast.error('创建下载任务失败', {
+              description: (error as Error).message,
+              duration: 5000,
+            });
           }
           return;
         }
 
-        // 批量下载多集
+        // 批量下载多集 - 立即显示 toast
+        const taskCount = episodeIndexes.length;
+        toast.success('下载已开始', {
+          description: taskCount === 1
+            ? `${videoTitle || '视频'}_第${episodeIndexes[0] + 1}集`
+            : `正在添加 ${taskCount} 个下载任务...`,
+          action: {
+            label: '查看下载',
+            onClick: () => setShowDownloadPanel(true)
+          },
+          duration: 5000,
+        });
+
+        let successCount = 0;
+        let hasAttempted = false;
         for (const episodeIndex of episodeIndexes) {
+          hasAttempted = true;
           try {
-            const episodeUrl = detail.episodes[episodeIndex];
+            let episodeUrl = detail.episodes[episodeIndex];
             if (!episodeUrl) continue;
+
+            // 检查是否为短剧格式，需要先解析
+            if (episodeUrl.startsWith('shortdrama:')) {
+              try {
+                const [, videoId, episode] = episodeUrl.split(':');
+                const nameParam = detail.drama_name ? `&name=${encodeURIComponent(detail.drama_name)}` : '';
+                const response = await fetch(
+                  `/api/shortdrama/parse?id=${videoId}&episode=${episode}${nameParam}`
+                );
+
+                if (response.ok) {
+                  const result = await response.json();
+                  episodeUrl = result.url || '';
+                  if (!episodeUrl) {
+                    console.warn(`第${episodeIndex + 1}集解析失败，跳过`);
+                    continue;
+                  }
+                } else {
+                  console.warn(`第${episodeIndex + 1}集解析失败，跳过`);
+                  continue;
+                }
+              } catch (parseError) {
+                console.error(`第${episodeIndex + 1}集短剧URL解析失败:`, parseError);
+                continue;
+              }
+            }
 
             // 检查是否是M3U8
             if (!episodeUrl.includes('.m3u8')) {
@@ -6013,9 +6130,23 @@ function PlayPageClient() {
               referer,
               origin,
             });
+            successCount++;
           } catch (error) {
             console.error(`创建第${episodeIndex + 1}集下载任务失败:`, error);
           }
+        }
+
+        // 如果有失败的任务，显示错误提示
+        if (successCount === 0 && hasAttempted) {
+          toast.error('下载失败', {
+            description: '无法创建下载任务，请查看控制台了解详情',
+            duration: 5000,
+          });
+        } else if (successCount < taskCount) {
+          toast.warning('部分任务创建失败', {
+            description: `成功添加 ${successCount}/${taskCount} 个下载任务`,
+            duration: 5000,
+          });
         }
       }}
       />

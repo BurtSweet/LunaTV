@@ -101,38 +101,9 @@ function ShortDramaCard({
       return;
     }
 
-    if (isAIRecommendFeatureDisabled()) {
-      setAiEnabledLocal(false);
-      setAiCheckCompleteLocal(true);
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const response = await fetch('/api/ai-recommend', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [{ role: 'user', content: 'ping' }],
-          }),
-        });
-        if (!cancelled) {
-          setAiEnabledLocal(response.status !== 403);
-          setAiCheckCompleteLocal(true);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setAiEnabledLocal(false);
-          setAiCheckCompleteLocal(true);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    const disabled = isAIRecommendFeatureDisabled();
+    setAiEnabledLocal(!disabled);
+    setAiCheckCompleteLocal(true);
   }, [aiEnabledProp]);
 
   // 获取真实集数（优先使用备用API）
@@ -338,7 +309,7 @@ function ShortDramaCard({
           />
 
           <img
-            src={drama.cover}
+            src={drama.cover ? `/api/image-proxy?url=${encodeURIComponent(drama.cover)}` : '/placeholder-cover.jpg'}
             alt={drama.name}
             className={`h-full w-full object-cover transition-all duration-700 ease-out ${
               imageLoaded ? 'opacity-100 blur-0 scale-100 group-hover:scale-105' : 'opacity-0 blur-md scale-105'
