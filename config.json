@@ -259,6 +259,16 @@
       "name": "🎬茅台资源",
       "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
       "detail": "https://mtzy.me"
+    },
+    "dbzy.tv": {
+      "name": "🎬豆瓣资源",
+      "api": "https://caiji.dbzy5.com/api.php/provide/vod",
+      "detail": "https://dbzy.tv"
+    },
+    "www.moduzy.net": {
+      "name": "🎬魔都资源",
+      "api": "https://www.mdzyapi.com/api.php/provide/vod",
+      "detail": "https://www.moduzy.net"
     }
   }
 }
