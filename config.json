@@ -210,6 +210,7 @@
       "detail": "https://wwzy.tv"
     },
     "dbzy.tv": {
+      "_comment": "有伦理片",
       "name": "🎬豆瓣资源",
       "api": "https://caiji.dbzy5.com/api.php/provide/vod",
       "detail": "https://dbzy.tv"
