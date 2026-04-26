@@ -54,11 +54,6 @@
       "api": "https://api.xinlangapi.com/xinlangapi.php/provide/vod",
       "name": "新浪资源"
     },
-    "1080zyk": {
-      "api": "https://api.1080zyku.com/inc/apijson.php/",
-      "name": "1080资源",
-      "detail": "https://api.1080zyku.com"
-    },
     "shandian": {
       "name": "🎬闪电资源",
       "api": "https://xsd.sdzyapi.com/api.php/provide/vod",
