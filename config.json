@@ -224,11 +224,6 @@
       "api": "https://api.maoyanapi.top/api.php/provide/vod",
       "detail": "https://www.maoyanzy.com"
     },
-    "www.ryzyw.com": {
-      "name": "🎬如意资源",
-      "api": "https://pz.v88.qzz.io/?url=https://cj.rycjapi.com/api.php/provide/vod",
-      "detail": "https://www.ryzyw.com"
-    },
     "bdzy1.com": {
       "name": "🎬百度云zy",
       "api": "https://pz.v88.qzz.io/?url=https://api.apibdzy.com/api.php/provide/vod",
@@ -244,6 +239,17 @@
       "name": "🎬优质资源",
       "api": "https://api.yzzy-api.com/inc/apijson.php",
       "detail": "https://1080zyk4.com"
+    },
+    "mtzy.me": {
+      "name": "🎬茅台资源",
+      "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
+      "detail": "https://mtzy.me"
+    },
+    "zy.jinchancaiji.com": {
+      "_comment": "无搜索结果",
+      "name": "🎬金蝉影视",
+      "api": "https://zy.jinchancaiji.com/api.php/provide/vod",
+      "detail": "https://zy.jinchancaiji.com"
     }
   }
 }
