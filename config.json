@@ -236,11 +236,6 @@
       "api": "https://www.huyaapi.com/api.php/provide/vod",
       "detail": "https://www.huyaapi.com"
     },
-    "jinyingzy.com": {
-      "name": "🎬金鹰点播",
-      "api": "https://jinyingzy.com/api.php/provide/vod",
-      "detail": "https://jinyingzy.com"
-    },
     "www.maoyanzy.com": {
       "name": "🎬猫眼资源",
       "api": "https://api.maoyanapi.top/api.php/provide/vod",
@@ -255,6 +250,11 @@
       "name": "🎬茅台资源",
       "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
       "detail": "https://mtzy.me"
+    },
+    "wolongzyw.com": {
+      "name": "🎬卧龙资源",
+      "api": "https://wolongzyw.com/api.php/provide/vod",
+      "detail": "https://wolongzyw.com"
     }
   }
 }
