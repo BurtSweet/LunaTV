@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getConfig } from '@/lib/config';
+import { getCacheTime, getConfig } from '@/lib/config';
 import { searchFromApi } from '@/lib/downstream';
 import { rankSearchResults } from '@/lib/search-ranking';
 import { yellowWords } from '@/lib/yellow';
@@ -192,12 +192,15 @@ export async function GET(request: NextRequest) {
       }),
     };
 
+    const cacheTime = await getCacheTime();
     return NextResponse.json(response, {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Cache-Control': 'public, max-age=300, s-maxage=300', // 5分钟缓存
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
         'X-Processing-Time': `${processingTime}ms`,
         'X-Result-Count': `${results.length}`,
         'X-Filter-Applied': shouldFilter ? 'true' : 'false',
