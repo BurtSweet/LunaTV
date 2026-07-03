@@ -1,10 +1,5 @@
 {
   "api_site": {
-    "jisu": {
-      "name": "🎬极速资源",
-      "api": "https://jszyapi.com/api.php/provide/vod",
-      "detail": "https://jszyapi.com"
-    },
     "bfzy": {
       "name": "🎬暴风资源",
       "api": "https://bfzyapi.com/api.php/provide/vod",
@@ -68,11 +63,6 @@
       "name": "🎬360 资源",
       "api": "https://360zyzz.com/api.php/provide/vod",
       "detail": "https://360zy.com"
-    },
-    "jszyapi.com": {
-      "name": "🎬极速资源",
-      "api": "https://jszyapi.com/api.php/provide/vod",
-      "detail": "https://jszyapi.com"
     },
     "bfzy.tv": {
       "name": "🎬暴风资源",
