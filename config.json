@@ -234,6 +234,11 @@
       "name": "🎬豪华资源",
       "api": "https://hhzyapi.com/api.php/provide/vod",
       "detail": "https://www.haohuazy.com"
+    },
+    "www.subozy.com": {
+      "name": "🎬速播资源",
+      "api": "https://subocaiji.com/api.php/provide/vod",
+      "detail": "https://www.subozy.com"
     }
   }
 }
