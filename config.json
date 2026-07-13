@@ -210,11 +210,6 @@
       "api": "https://caiji.dbzy5.com/api.php/provide/vod",
       "detail": "https://dbzy.tv"
     },
-    "mtzy.me": {
-      "name": "🎬茅台资源",
-      "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
-      "detail": "https://mtzy.me"
-    },
     "jinyingzy.com": {
       "name": "🎬金鹰点播",
       "api": "https://jyzyapi.com/provide/vod/from/jinyingyun/at/json",
