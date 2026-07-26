@@ -162,12 +162,6 @@
       "api": "https://cj.rycjapi.com/api.php/provide/vod",
       "detail": "https://www.ryzyw.com"
     },
-    "www.huyaapi.com": {
-      "_comment": "污染搜索结果",
-      "name": "🎬虎牙资源",
-      "api": "https://www.huyaapi.com/api.php/provide/vod",
-      "detail": "https://www.huyaapi.com"
-    },
     "api.guangsuapi.com": {
       "name": "🎬光速资源",
       "api": "https://api.guangsuapi.com/api.php/provide/vod",
@@ -205,7 +199,6 @@
       "detail": "https://www.hongniuzy.com"
     },
     "dbzy.tv": {
-      "_comment": "有伦理片",
       "name": "🎬豆瓣资源",
       "api": "https://caiji.dbzy5.com/api.php/provide/vod",
       "detail": "https://dbzy.tv"
