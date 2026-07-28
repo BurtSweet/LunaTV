@@ -80,11 +80,6 @@
       "api": "https://zuidazy.me/api.php/provide/vod",
       "detail": "https://zuidazy.co"
     },
-    "wujinzy.me": {
-      "name": "🎬无尽资源",
-      "api": "https://api.wujinapi.me/api.php/provide/vod",
-      "detail": "https://wujinzy.com"
-    },
     "wujinzy.com": {
       "_comment": "备用",
       "name": "🎬无尽影视",
@@ -232,6 +227,12 @@
       "name": "🎬茅台资源",
       "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
       "detail": "https://mtzy.me"
+    },
+    "www.huyaapi.com": {
+      "_comment": "污染搜索结果",
+      "name": "🎬虎牙资源",
+      "api": "https://www.huyaapi.com/api.php/provide/vod",
+      "detail": "https://www.huyaapi.com"
     }
   }
 }
