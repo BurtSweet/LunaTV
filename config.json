@@ -80,12 +80,6 @@
       "api": "https://zuidazy.me/api.php/provide/vod",
       "detail": "https://zuidazy.co"
     },
-    "wujinzy.com": {
-      "_comment": "备用",
-      "name": "🎬无尽影视",
-      "api": "https://api.wujinapi.com/api.php/provide/vod",
-      "detail": "https://wujinzy.com"
-    },
     "xinlangapi.com": {
       "name": "🎬新浪资源",
       "api": "https://api.xinlangapi.com/xinlangapi.php/provide/vod",
