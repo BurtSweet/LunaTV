@@ -211,6 +211,12 @@
       "name": "🎬艾旦影视",
       "api": "https://pz.v88.qzz.io/?url=https://lovedan.net/api.php/provide/vod",
       "detail": "https://lovedan.net"
+    },
+    "wujinzy.com": {
+      "_comment": "备用",
+      "name": "🎬无尽影视",
+      "api": "https://api.wujinapi.com/api.php/provide/vod",
+      "detail": "https://wujinzy.com"
     }
   }
 }
