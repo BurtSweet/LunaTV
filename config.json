@@ -109,11 +109,6 @@
       "api": "https://xsd.sdzyapi.com/api.php/provide/vod",
       "detail": "https://shandianzy.com"
     },
-    "caiji.moduapi.cc": {
-      "name": "🎬魔都动漫",
-      "api": "https://caiji.moduapi.cc/api.php/provide/vod",
-      "detail": "https://caiji.moduapi.cc"
-    },
     "yayazy3.com": {
       "_comment": "暂不支持搜索",
       "name": "🎬鸭鸭资源",
@@ -135,11 +130,6 @@
       "name": "🎬旺旺短剧",
       "api": "https://wwzy.tv/api.php/provide/vod",
       "detail": "https://wwzy.tv"
-    },
-    "www.moduzy.net": {
-      "name": "🎬魔都资源",
-      "api": "https://www.mdzyapi.com/api.php/provide/vod",
-      "detail": "https://www.moduzy.net"
     },
     "api.guangsuapi.com": {
       "name": "🎬光速资源",
