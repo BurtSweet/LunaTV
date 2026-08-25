@@ -1,8 +1,15 @@
 /* eslint-disable no-console */
 import { createHash } from 'crypto';
 import fs from 'fs';
-import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
+
+// node:sqlite is only available in Node.js 22.5+; dynamic require avoids
+// a hard crash on runtimes that don't ship this built-in (e.g. EdgeOne Pages
+// with Node.js 20). The import is deferred to the constructor so the module
+// can be loaded safely and will only throw when SqliteStorage is actually
+// instantiated on an unsupported runtime.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DatabaseSync = any;
 
 import { AdminConfig } from './admin.types';
 import { hashPassword as hashPwd, isHashed, verifyPassword } from './password';
@@ -22,10 +29,21 @@ const SEARCH_HISTORY_LIMIT = 20;
 const CACHE_CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // 60 分钟
 
 export class SqliteStorage implements IStorage {
-  private db: DatabaseSync;
+  private db!: DatabaseSync;
   private cleanupTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { DatabaseSync } = require('node:sqlite') as { DatabaseSync: new (path: string) => DatabaseSync };
+
+    const isBuild = process.env.IS_BUILD_PHASE === 'true';
+
+    if (isBuild) {
+      this.db = new DatabaseSync(':memory:');
+      this.initTables();
+      return;
+    }
+
     const dbPath =
       process.env.SQLITE_DB_PATH ||
       path.join(process.cwd(), 'data', 'lunatv.db');

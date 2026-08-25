@@ -1151,17 +1151,18 @@ function LivePageClient() {
                   target.style.display = 'none';
                   const parent = target.parentElement;
                   if (parent && !parent.querySelector('.fallback-icon')) {
-                    parent.innerHTML = `
-                      <div class="fallback-icon relative w-full h-full flex items-center justify-center">
-                        <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-                        </svg>
-                        <span class="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                        </span>
-                      </div>
+                    const fallback = document.createElement('div');
+                    fallback.className = 'fallback-icon relative w-full h-full flex items-center justify-center';
+                    fallback.innerHTML = `
+                      <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                      </svg>
+                      <span class="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                      </span>
                     `;
+                    parent.appendChild(fallback);
                   }
                 }}
               />
@@ -1752,7 +1753,12 @@ function LivePageClient() {
       
       // 浏览器特殊优化
       liveDurationInfinity: false, // 源码默认，Safari兼容
-      
+
+      // v1.7.0 新增：直播源连续 N 次刷新播放列表无变化时判定为假死，抛出 PLAYLIST_UNCHANGED_ERROR，避免无限轮询死频道
+      liveMaxUnchangedPlaylistRefresh: 5,
+      // v1.7.0 新增：appendBuffer 卡死超时兜底，避免播放静默卡住不报错
+      appendTimeout: 10000,
+
       // 移动设备网络优化 - 使用新的LoadPolicy配置
       ...(isMobile && {
         // 使用 fragLoadPolicy 替代旧的配置方式
@@ -1856,6 +1862,15 @@ function LivePageClient() {
       if (data.details === Hls.ErrorDetails.BUFFER_INCOMPATIBLE_CODECS_ERROR) {
         console.error('Incompatible codecs error - fatal');
         setUnsupportedType('codec-incompatible');
+        setIsVideoLoading(false);
+        hls.destroy();
+        return;
+      }
+
+      // v1.7.0 新增：直播源连续多次刷新内容无变化（假死），hls.js 已耗尽内部重试预算，主动判定为不可用
+      if (data.details === Hls.ErrorDetails.PLAYLIST_UNCHANGED_ERROR) {
+        console.error('直播源假死（播放列表连续无变化），判定为不可用');
+        setUnsupportedType('channel-unavailable');
         setIsVideoLoading(false);
         hls.destroy();
         return;
