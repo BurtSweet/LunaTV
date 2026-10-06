@@ -214,11 +214,6 @@
       "api": "https://api.wujinapi.com/api.php/provide/vod",
       "detail": "https://wujinzy.com"
     },
-    "iqiyizyapi.com": {
-      "name": "🎬-爱奇艺-",
-      "api": "https://iqiyizyapi.com/api.php/provide/vod",
-      "detail": "https://iqiyizyapi.com"
-    },
     "www.maoyanzy.com": {
       "name": "🎬猫眼资源",
       "api": "https://api.maoyanapi.top/api.php/provide/vod",
